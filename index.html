@@ -538,7 +538,14 @@ const initApp = async () => {
     const cachedUsername = localStorage.getItem('assetReportUsername');
     if (cachedUsername) {
         state.username = cachedUsername;
-        els.usr.value = cachedUsername; // 修正：必須先填入 UI 輸入框，避免稍後被空值覆蓋
+        els.usr.value = cachedUsername; 
+    }
+
+    // 讀取獨立快取的 Layout 設定
+    const cachedLayout = localStorage.getItem('assetReportLayout');
+    if (cachedLayout) {
+        state.layout = cachedLayout;
+        els.layout.value = cachedLayout;
     }
 
     updateSelectors();
@@ -776,10 +783,15 @@ const updateStateFromUI = () => {
     state.prev_us = parseFloat(els.pUs.value) || 0;
     state.prev_tw = parseInt(els.pTw.value) || 0;
     state.prev_exchange_rate = parseFloat(els.pRate.value) || 32.0;
+    
     state.username = els.usr.value;
     localStorage.setItem('assetReportUsername', state.username);
+    
     state.theme = els.theme.value;
+    
+    // 儲存 Layout 設定到快取中
     state.layout = els.layout.value;
+    localStorage.setItem('assetReportLayout', state.layout);
 
     const tot = Math.floor(state.us_stock * state.exchange_rate + state.tw_stock);
     els.totCalc.value = tot;
