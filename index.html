@@ -283,13 +283,20 @@ const drawBackground = (ctx, C) => {
     ctx.fillStyle = C.bg;
     ctx.fillRect(0, 0, CANVAS_SIZE.w, CANVAS_SIZE.h);
     
-    // 繪製模糊裝飾圓 (增加透明度使其更鮮豔)
-    ctx.filter = 'blur(120px)';
-    ctx.fillStyle = "rgba(59, 130, 246, 0.45)"; // 鮮豔藍
-    ctx.beginPath(); ctx.arc(CANVAS_SIZE.w - 150, 150, 350, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = "rgba(249, 115, 22, 0.45)"; // 鮮豔橙
-    ctx.beginPath(); ctx.arc(150, CANVAS_SIZE.h - 150, 350, 0, Math.PI * 2); ctx.fill();
-    ctx.filter = 'none'; // 重置模糊
+    // 使用 RadialGradient 模擬毛玻璃模糊，解決 iOS Safari 不支援 ctx.filter 的問題
+    const gradBlue = ctx.createRadialGradient(CANVAS_SIZE.w - 150, 150, 0, CANVAS_SIZE.w - 150, 150, 500);
+    gradBlue.addColorStop(0, "rgba(59, 130, 246, 0.5)");
+    gradBlue.addColorStop(0.5, "rgba(59, 130, 246, 0.2)");
+    gradBlue.addColorStop(1, "rgba(59, 130, 246, 0)");
+    ctx.fillStyle = gradBlue;
+    ctx.fillRect(0, 0, CANVAS_SIZE.w, CANVAS_SIZE.h);
+
+    const gradOrange = ctx.createRadialGradient(150, CANVAS_SIZE.h - 150, 0, 150, CANVAS_SIZE.h - 150, 500);
+    gradOrange.addColorStop(0, "rgba(249, 115, 22, 0.5)");
+    gradOrange.addColorStop(0.5, "rgba(249, 115, 22, 0.2)");
+    gradOrange.addColorStop(1, "rgba(249, 115, 22, 0)");
+    ctx.fillStyle = gradOrange;
+    ctx.fillRect(0, 0, CANVAS_SIZE.w, CANVAS_SIZE.h);
 
     // 加上半透明的覆蓋層，創造毛玻璃的質感
     const overlayColor = state.theme === 'light' ? "rgba(255, 255, 255, 0.6)" : "rgba(15, 23, 42, 0.6)";
