@@ -653,7 +653,7 @@ const attachListeners = () => {
         reader.readAsText(file);
     });
 
-    document.getElementById('btnDownload').addEventListener('click', () => {
+    document.getElementById('btnDownload').addEventListener('click', async () => {
         const l = state.layout;
         const c = els.combine.checked;
         const baseName = `Asset_${state.year}_${state.month}`;
@@ -663,6 +663,56 @@ const attachListeners = () => {
             const a = document.createElement('a'); a.href = url; a.download = name; a.click();
         };
 
+        // 轉換 Canvas 為 File 物件 (為了供手機端分享使用)
+        const getCanvasFile = (canvasId, name) => {
+            return new Promise(resolve => {
+                document.getElementById(canvasId).toBlob(blob => {
+                    resolve(new File([blob], name, { type: 'image/png' }));
+                });
+            });
+        };
+
+        // 偵測是否為行動裝置
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+        // 如果是行動裝置且支援 Web Share API
+        if (isMobile && navigator.canShare) {
+            try {
+                let filesToShare = [];
+                if (l === 'Single Page') {
+                    filesToShare.push(await getCanvasFile('canvas1', `${baseName}.png`));
+                } else if (l === 'Multi Page' && c) {
+                    const c1 = document.getElementById('canvas1');
+                    const c2 = document.getElementById('canvas2');
+                    const combo = document.createElement('canvas');
+                    combo.width = CANVAS_SIZE.w; combo.height = CANVAS_SIZE.h * 2;
+                    const ctx = combo.getContext('2d');
+                    ctx.drawImage(c1, 0, 0); ctx.drawImage(c2, 0, CANVAS_SIZE.h);
+                    const file = await new Promise(resolve => {
+                        combo.toBlob(blob => resolve(new File([blob], `${baseName}_combined.png`, {type: 'image/png'})));
+                    });
+                    filesToShare.push(file);
+                } else {
+                    filesToShare.push(await getCanvasFile('canvas1', `${baseName}_cover.png`));
+                    filesToShare.push(await getCanvasFile('canvas2', `${baseName}_detail.png`));
+                }
+
+                if (navigator.canShare({ files: filesToShare })) {
+                    await navigator.share({
+                        files: filesToShare,
+                        title: 'Asset Report',
+                        text: 'IG Asset Report'
+                    });
+                    showMsg('✅ 請在選單中點選「儲存影像」');
+                    return; // 成功呼叫原生選單後就結束，不執行下方電腦版下載
+                }
+            } catch (err) {
+                console.log('Share canceled or failed', err);
+                return; // 假如使用者取消分享，也不要跳出下載
+            }
+        }
+
+        // 電腦版或不支援 Share API 的一般下載行為
         if(l === 'Single Page') {
             dlCanvas('canvas1', `${baseName}.png`);
         } else if(l === 'Multi Page' && c) {
