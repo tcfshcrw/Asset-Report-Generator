@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IG Asset Report Generator</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .canvas-container { max-width: 100%; height: auto; border-radius: 0.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        canvas { max-width: 100%; height: auto; }
+    </style>
+    <script>
+        // Inline PWA Manifest Configuration
+        const manifest = {
+            name: "Asset Report Generator",
+            short_name: "AssetReport",
+            start_url: ".",
+            display: "standalone",
+            background_color: "#ffffff",
+            theme_color: "#3b82f6",
+            icons: [{
+                src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233b82f6'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z'/%3E%3C/svg%3E",
+                sizes: "192x192",
+                type: "image/svg+xml"
+            }]
+        };
+        const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+        const manifestUrl = URL.createObjectURL(manifestBlob);
+        document.write(`<link rel="manifest" href="${manifestUrl}">`);
+
+        // Inline Service Worker for PWA setup
+        const swCode = `
+            self.addEventListener('install', (e) => { self.skipWaiting(); });
+            self.addEventListener('activate', (e) => { e.waitUntil(clients.claim()); });
+            self.addEventListener('fetch', (e) => { });
+        `;
+        const swBlob = new Blob([swCode], { type: 'application/javascript' });
+        const swUrl = URL.createObjectURL(swBlob);
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register(swUrl).catch((err) => {
+                console.warn('PWA SW registration skipped in sandbox environment.', err);
+            });
+        }
+    </script>
+</head>
+<body class="text-gray-800 p-4 md:p-8">
+
+<div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <!-- Controls Panel -->
+    <div class="lg:col-span-5 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+        <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">📊 IG Asset Report Generator</h2>
+
+        <div class="space-y-6">
+            <!-- Data Management -->
+            <section>
+                <h3 class="font-bold border-b pb-2 mb-3">Data Management</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">📅 Select Month:</label>
+                        <select id="recordSelector" class="w-full p-2 border rounded-md"></select>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">📉 Compare With:</label>
+                        <select id="compareSelect" class="w-full p-2 border rounded-md"></select>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Current Data Editor -->
+            <section>
+                <h3 class="font-bold border-b pb-2 mb-3">📝 Current Data Editor</h3>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">Year:</label>
+                        <select id="inYear" class="w-full p-2 border rounded-md"></select>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">Month:</label>
+                        <select id="inMonth" class="w-full p-2 border rounded-md"></select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">🇺🇸 US ($):</label>
+                        <input type="number" id="inUs" class="w-full p-2 border rounded-md" step="0.01">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">🇹🇼 TW (NT):</label>
+                        <input type="number" id="inTw" class="w-full p-2 border rounded-md">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">📥 US Deposit:</label>
+                        <input type="number" id="inUsDep" class="w-full p-2 border rounded-md" step="0.01">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">📥 TW Deposit:</label>
+                        <input type="number" id="inTwDep" class="w-full p-2 border rounded-md">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">💰 Monthly Added (TWD):</label>
+                        <input type="number" id="inMonthlyAdded" class="w-full p-2 border rounded-md">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">⚖️ Leverage:</label>
+                        <input type="number" id="inLeverage" class="w-full p-2 border rounded-md" step="0.1">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-4 items-end">
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">💱 Rate:</label>
+                        <input type="number" id="inRate" class="w-full p-2 border rounded-md" step="0.01">
+                    </div>
+                    <button id="btnFetchRate" class="bg-blue-100 text-blue-700 p-2 rounded-md font-semibold hover:bg-blue-200 transition">🔄 Get Rate</button>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-sm text-gray-600 mb-1">💰 Calc Total:</label>
+                    <input type="number" id="inTotalCalc" class="w-full p-2 border rounded-md bg-gray-50" readonly>
+                </div>
+
+                <p class="text-xs text-gray-500 mb-2 italic">Previous data (Auto-filled by comparison):</p>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">Prev Total:</label>
+                        <input type="number" id="inPrevTotal" class="w-full p-2 border rounded-md">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">Prev US:</label>
+                        <input type="number" id="inPrevUs" class="w-full p-2 border rounded-md" step="0.01">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">Prev TW:</label>
+                        <input type="number" id="inPrevTw" class="w-full p-2 border rounded-md">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">Prev Rate:</label>
+                        <input type="number" id="inPrevRate" class="w-full p-2 border rounded-md" step="0.01">
+                    </div>
+                </div>
+                
+                <button id="btnSave" class="w-full bg-blue-600 text-white p-2 rounded-md font-bold hover:bg-blue-700 transition">💾 Save Record</button>
+            </section>
+
+            <!-- Settings -->
+            <section>
+                <h3 class="font-bold border-b pb-2 mb-3">⚙️ Settings</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">IG ID:</label>
+                        <input type="text" id="inUsername" class="w-full p-2 border rounded-md">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">Theme:</label>
+                        <select id="inTheme" class="w-full p-2 border rounded-md">
+                            <option value="light">Light</option>
+                            <option value="dark">Dark</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 mb-1">Layout:</label>
+                        <select id="inLayout" class="w-full p-2 border rounded-md">
+                            <option value="Multi Page">Multi Page</option>
+                            <option value="Single Page">Single Page</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Actions -->
+            <div class="flex flex-wrap gap-2 pt-4 border-t">
+                <button id="btnImport" class="bg-yellow-500 text-white px-4 py-2 rounded-md font-semibold hover:bg-yellow-600 transition">📤 Import JSON</button>
+                <button id="btnExport" class="bg-teal-500 text-white px-4 py-2 rounded-md font-semibold hover:bg-teal-600 transition">📥 Export JSON</button>
+                <button id="btnDownload" class="bg-green-600 text-white px-4 py-2 rounded-md font-semibold hover:bg-green-700 transition">🖼️ Download Images</button>
+                <div class="flex items-center ml-2" id="wrapCombine">
+                    <input type="checkbox" id="inCombine" class="mr-2">
+                    <label for="inCombine" class="text-sm">Merge as one image</label>
+                </div>
+                <input type="file" id="fileInput" accept=".json" class="hidden">
+            </div>
+            <div id="statusMsg" class="text-sm text-gray-500 mt-2 h-4"></div>
+        </div>
+    </div>
+
+    <!-- Preview Panel -->
+    <div class="lg:col-span-7 bg-gray-200 p-6 rounded-xl border border-gray-300 flex flex-col items-center justify-start overflow-hidden">
+        <h2 class="text-xl font-bold mb-4 w-full text-left">Preview</h2>
+        <div id="previewContainer" class="flex flex-col gap-4 justify-center items-center w-full overflow-x-auto">
+            <canvas id="canvas1" class="canvas-container bg-white" width="1080" height="1350"></canvas>
+            <canvas id="canvas2" class="canvas-container bg-white hidden" width="1080" height="1350"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+const CANVAS_SIZE = { w: 1080, h: 1350 };
+const IG_ICON_URL = "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Instagram_logo_2016.svg/120px-Instagram_logo_2016.svg.png";
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+let igIconImg = null;
+
+const COLORS = {
+    light: { bg: "#FFFFFF", card_bg: "#FFFFFF", text_main: "#111827", text_sub: "#6B7280", border: "#E5E7EB", up: "#DC2626", down: "#16A34A", up_bg: "#FEF2F2", down_bg: "#F0FDF4" },
+    dark: { bg: "#0F172A", card_bg: "#1E293B", text_main: "#F9FAFB", text_sub: "#94A3B8", border: "#334155", up: "#F87171", down: "#4ADE80", up_bg: "#450A0A", down_bg: "#052E16" }
+};
+
+let state = {
+    year: 2026, month: "January", us_stock: 35000.0, tw_stock: 1200000, us_deposit: 500.0, tw_deposit: 20000,
+    monthly_added_twd: 36250, exchange_rate: 32.5, prev_total: 2300000, prev_us: 34000.0, prev_tw: 1150000,
+    ytd_deposit: 0, prev_exchange_rate: 32.0, leverage_ratio: 1.0, username: "Default_ID", theme: "light", layout: "Multi Page"
+};
+let historyRecords = [];
+let isLoading = false;
+
+// Helpers
+const formatNum = (num) => Math.floor(num).toLocaleString('en-US');
+const calcGrowth = (prev, curr) => {
+    if (!prev) return { diff: 0, str: "+0", pct: "0.0%" };
+    const diff = curr - prev;
+    const pct = (diff / prev) * 100;
+    const sign = diff >= 0 ? "+" : "";
+    return { diff, str: `${sign}${Math.floor(diff).toLocaleString('en-US')}`, pct: `${pct.toFixed(1)}%` };
+};
+const showMsg = (msg) => { document.getElementById('statusMsg').innerText = msg; setTimeout(() => document.getElementById('statusMsg').innerText = '', 3000); };
+
+// DOM Elements bindings
+const els = {
+    year: document.getElementById('inYear'), month: document.getElementById('inMonth'),
+    us: document.getElementById('inUs'), tw: document.getElementById('inTw'),
+    usDep: document.getElementById('inUsDep'), twDep: document.getElementById('inTwDep'),
+    moAdded: document.getElementById('inMonthlyAdded'), lev: document.getElementById('inLeverage'),
+    rate: document.getElementById('inRate'), totCalc: document.getElementById('inTotalCalc'),
+    pTot: document.getElementById('inPrevTotal'), pUs: document.getElementById('inPrevUs'),
+    pTw: document.getElementById('inPrevTw'), pRate: document.getElementById('inPrevRate'),
+    usr: document.getElementById('inUsername'), theme: document.getElementById('inTheme'),
+    layout: document.getElementById('inLayout'), combine: document.getElementById('inCombine'),
+    wrapCombine: document.getElementById('wrapCombine'), recSel: document.getElementById('recordSelector'),
+    compSel: document.getElementById('compareSelect'), fileIn: document.getElementById('fileInput'),
+    btnFetchRate: document.getElementById('btnFetchRate')
+};
+
+// Canvas Drawing Helpers
+const drawRoundRect = (ctx, x, y, w, h, r, fill, stroke, strokeWidth) => {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+    if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+    if (stroke) { ctx.lineWidth = strokeWidth || 1; ctx.strokeStyle = stroke; ctx.stroke(); }
+};
+
+const drawText = (ctx, text, x, y, size, color, align = "center", baseline = "middle") => {
+    ctx.font = `${size}px Roboto, sans-serif`;
+    ctx.fillStyle = color;
+    ctx.textAlign = align;
+    ctx.textBaseline = baseline;
+    ctx.fillText(text, x, y);
+};
+
+const drawBackground = (ctx, C) => {
+    ctx.fillStyle = C.bg;
+    ctx.fillRect(0, 0, CANVAS_SIZE.w, CANVAS_SIZE.h);
+    // Decorations
+    ctx.filter = 'blur(100px)';
+    ctx.fillStyle = "rgba(59, 130, 246, 0.2)";
+    ctx.beginPath(); ctx.arc(CANVAS_SIZE.w - 200, 100, 300, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "rgba(249, 115, 22, 0.2)";
+    ctx.beginPath(); ctx.arc(100, CANVAS_SIZE.h - 200, 300, 0, Math.PI * 2); ctx.fill();
+    ctx.filter = 'none';
+};
+
+const drawFooter = (ctx, C) => {
+    const lineY = 1090;
+    ctx.beginPath(); ctx.moveTo(80, lineY); ctx.lineTo(CANVAS_SIZE.w - 80, lineY);
+    ctx.strokeStyle = C.border; ctx.lineWidth = 3; ctx.stroke();
+
+    const signText = `@${state.username}`;
+    ctx.font = `35px Roboto, sans-serif`;
+    const signW = ctx.measureText(signText).width;
+    const iconS = 50, gap = 15;
+    const totalW = iconS + gap + signW;
+    const startX = CANVAS_SIZE.w / 2 - totalW / 2;
+    const startY = lineY + 100;
+
+    if (igIconImg) {
+        ctx.drawImage(igIconImg, startX, startY, iconS, iconS);
+    } else {
+        ctx.beginPath(); ctx.arc(startX + iconS/2, startY + iconS/2, iconS/2, 0, Math.PI*2);
+        ctx.strokeStyle = C.text_main; ctx.lineWidth = 2; ctx.stroke();
+    }
+    drawText(ctx, signText, startX + iconS + gap, startY + iconS/2, 35, C.text_main, "left", "middle");
+};
+
+// Render Functions
+const generateImageSingle = () => {
+    const c = document.getElementById('canvas1');
+    const ctx = c.getContext('2d');
+    const C = COLORS[state.theme];
+    drawBackground(ctx, C);
+
+    const title = `${state.month.substring(0,3)} ${state.year} Asset Report`;
+    const currentTotal = Math.floor(state.us_stock * state.exchange_rate + state.tw_stock);
+    const CX = CANVAS_SIZE.w / 2;
+
+    // Header
+    drawText(ctx, title, CX, 100, 60, C.text_main, "center", "top");
+    const tag = "MONTHLY REPORT";
+    ctx.font = `25px Roboto, sans-serif`;
+    const tagW = ctx.measureText(tag).width;
+    drawRoundRect(ctx, CX - tagW/2 - 45, 187, tagW + 90, 70, 35, "#F3F4F6", null, 0);
+    drawText(ctx, tag, CX, 222, 25, "#6B7280", "center", "middle");
+
+    // Total
+    drawText(ctx, "TOTAL ASSETS", CX, 340, 45, C.text_sub, "center", "top");
+    const totStr = formatNum(currentTotal);
+    ctx.font = `85px Roboto, sans-serif`;
+    const numW = ctx.measureText(totStr).width;
+    const dolStr = "TWD";
+    const dolW = ctx.measureText(dolStr).width;
+    const gap = 20, totW = dolW + gap + numW;
+    const startX = (CANVAS_SIZE.w - totW) / 2;
+    
+    drawText(ctx, dolStr, startX, 470, 85, C.text_main, "left", "alphabetic");
+    drawText(ctx, totStr, startX + dolW + gap, 470, 85, C.text_main, "left", "alphabetic");
+
+    // Growth Pill
+    const { diff, str, pct } = calcGrowth(state.prev_total, currentTotal);
+    const isPos = diff >= 0;
+    const trendStr = `${isPos ? '▲' : '▼'} ${str} (${pct})`;
+    ctx.font = `45px Roboto, sans-serif`;
+    const trendW = ctx.measureText(trendStr).width;
+    drawRoundRect(ctx, CX - trendW/2 - 60, 530, trendW + 120, 90, 45, isPos ? C.up_bg : C.down_bg, null, 0);
+    drawText(ctx, trendStr, CX, 575, 45, isPos ? C.up : C.down, "center", "middle");
+
+    // Grid (US / TW)
+    const cardW = 440, cardH = 360, gridY = 660, gGap = 40;
+    const leftX = CX - cardW - gGap/2, rightX = CX + gGap/2;
+
+    const drawCard = (x, title, val, dep, pVal) => {
+        drawRoundRect(ctx, x, gridY, cardW, cardH, 40, C.card_bg, C.border, 5);
+        drawText(ctx, title, x + 40, gridY + 60, 45, C.text_sub, "left", "middle");
+        drawText(ctx, formatNum(val), x + 40, gridY + 150, 60, C.text_main, "left", "middle");
+        if(dep > 0) drawText(ctx, `Dep: +${formatNum(dep)}`, x + 40, gridY + 230, 25, C.text_sub, "left", "middle");
+        const g = calcGrowth(pVal, val);
+        const gPos = g.diff >= 0;
+        drawText(ctx, `${gPos ? '▲' : '▼'} ${g.str} (${g.pct})`, x + 40, gridY + 290, 45, gPos ? C.up : C.down, "left", "middle");
+    };
+
+    drawCard(leftX, "US STOCK", state.us_stock, state.us_deposit, state.prev_us);
+    drawCard(rightX, "TW STOCK", state.tw_stock, state.tw_deposit, state.prev_tw);
+
+    // Footer Ext
+    const lineY = 1090;
+    ctx.beginPath(); ctx.moveTo(80, lineY); ctx.lineTo(CANVAS_SIZE.w - 80, lineY);
+    ctx.strokeStyle = C.border; ctx.lineWidth = 3; ctx.stroke();
+
+    const rateDiff = state.exchange_rate - state.prev_exchange_rate;
+    const rPos = rateDiff >= 0;
+    const alignX = 80;
+    drawText(ctx, `EXCHANGE RATE: 1 USD = ${state.exchange_rate} TWD`, alignX, lineY + 40, 30, C.text_sub, "left", "middle");
+    ctx.font = `30px Roboto, sans-serif`;
+    const rW = ctx.measureText(`EXCHANGE RATE: 1 USD = ${state.exchange_rate} TWD`).width;
+    drawText(ctx, ` (${rPos ? '▲' : '▼'} ${Math.abs(rateDiff).toFixed(3)})`, alignX + rW, lineY + 40, 30, rPos ? C.up : C.down, "left", "middle");
+
+    drawText(ctx, `THIS MONTH ADDED: $${formatNum(state.monthly_added_twd)} TWD`, alignX, lineY + 80, 30, C.text_sub, "left", "middle");
+    drawText(ctx, `YTD ADDED (Jan-Now): $${formatNum(state.ytd_deposit)} TWD`, alignX, lineY + 120, 30, C.text_sub, "left", "middle");
+    drawText(ctx, `LEVERAGE RATIO: ${state.leverage_ratio}x`, alignX, lineY + 160, 30, C.text_sub, "left", "middle");
+
+    // Adjusted Footer Signature
+    const signText = `@${state.username}`;
+    ctx.font = `35px Roboto, sans-serif`;
+    const signW = ctx.measureText(signText).width;
+    const iconS = 50, gapS = 15;
+    const startXSign = CX - (iconS + gapS + signW) / 2;
+    const startYSign = lineY + 200;
+    
+    if (igIconImg) { ctx.drawImage(igIconImg, startXSign, startYSign, iconS, iconS); }
+    else { ctx.beginPath(); ctx.arc(startXSign + iconS/2, startYSign + iconS/2, iconS/2, 0, Math.PI*2); ctx.strokeStyle = C.text_main; ctx.lineWidth = 2; ctx.stroke(); }
+    drawText(ctx, signText, startXSign + iconS + gapS, startYSign + iconS/2, 35, C.text_main, "left", "middle");
+};
+
+const generateImageP1 = () => {
+    const c = document.getElementById('canvas1');
+    const ctx = c.getContext('2d');
+    const C = COLORS[state.theme];
+    drawBackground(ctx, C);
+
+    const title = `${state.month.substring(0,3)} ${state.year} Asset Report`;
+    const currentTotal = Math.floor(state.us_stock * state.exchange_rate + state.tw_stock);
+    const CX = CANVAS_SIZE.w / 2;
+
+    drawText(ctx, title, CX, 100, 60, C.text_main, "center", "top");
+    const tag = "MONTHLY REPORT";
+    ctx.font = `25px Roboto, sans-serif`;
+    const tagW = ctx.measureText(tag).width;
+    drawRoundRect(ctx, CX - tagW/2 - 45, 187, tagW + 90, 70, 35, "#F3F4F6", null, 0);
+    drawText(ctx, tag, CX, 222, 25, "#6B7280", "center", "middle");
+
+    drawText(ctx, "TOTAL ASSETS", CX, 340, 45, C.text_sub, "center", "top");
+    const totStr = formatNum(currentTotal);
+    ctx.font = `85px Roboto, sans-serif`;
+    const numW = ctx.measureText(totStr).width;
+    const dolStr = "TWD";
+    const dolW = ctx.measureText(dolStr).width;
+    const gap = 20, totW = dolW + gap + numW;
+    const startX = (CANVAS_SIZE.w - totW) / 2;
+    
+    drawText(ctx, dolStr, startX, 470, 85, C.text_main, "left", "alphabetic");
+    drawText(ctx, totStr, startX + dolW + gap, 470, 85, C.text_main, "left", "alphabetic");
+
+    const { diff, str, pct } = calcGrowth(state.prev_total, currentTotal);
+    const isPos = diff >= 0;
+    const trendStr = `${isPos ? '▲' : '▼'} ${str} (${pct})`;
+    ctx.font = `45px Roboto, sans-serif`;
+    const trendW = ctx.measureText(trendStr).width;
+    drawRoundRect(ctx, CX - trendW/2 - 60, 530, trendW + 120, 90, 45, isPos ? C.up_bg : C.down_bg, null, 0);
+    drawText(ctx, trendStr, CX, 575, 45, isPos ? C.up : C.down, "center", "middle");
+
+    const cardW = 440, cardH = 360, gridY = 690, gGap = 40;
+    const leftX = CX - cardW - gGap/2, rightX = CX + gGap/2;
+
+    const drawCard = (x, title, val, dep, pVal) => {
+        drawRoundRect(ctx, x, gridY, cardW, cardH, 40, C.card_bg, C.border, 5);
+        drawText(ctx, title, x + 40, gridY + 60, 45, C.text_sub, "left", "middle");
+        drawText(ctx, formatNum(val), x + 40, gridY + 150, 60, C.text_main, "left", "middle");
+        if(dep > 0) drawText(ctx, `Dep: +${formatNum(dep)}`, x + 40, gridY + 230, 25, C.text_sub, "left", "middle");
+        const g = calcGrowth(pVal, val);
+        const gPos = g.diff >= 0;
+        drawText(ctx, `${gPos ? '▲' : '▼'} ${g.str} (${g.pct})`, x + 40, gridY + 290, 45, gPos ? C.up : C.down, "left", "middle");
+    };
+
+    drawCard(leftX, "US STOCK", state.us_stock, state.us_deposit, state.prev_us);
+    drawCard(rightX, "TW STOCK", state.tw_stock, state.tw_deposit, state.prev_tw);
+
+    drawFooter(ctx, C);
+};
+
+const generateImageP2 = () => {
+    const c = document.getElementById('canvas2');
+    const ctx = c.getContext('2d');
+    const C = COLORS[state.theme];
+    drawBackground(ctx, C);
+
+    const title = `${state.month.substring(0,3)} ${state.year} Details`;
+    const CX = CANVAS_SIZE.w / 2;
+
+    drawText(ctx, title, CX, 100, 60, C.text_main, "center", "top");
+    const tag = "FUNDING & FX";
+    ctx.font = `25px Roboto, sans-serif`;
+    const tagW = ctx.measureText(tag).width;
+    drawRoundRect(ctx, CX - tagW/2 - 45, 187, tagW + 90, 70, 35, "#F3F4F6", null, 0);
+    drawText(ctx, tag, CX, 222, 25, "#6B7280", "center", "middle");
+
+    const cardW = 880, cardH = 170, cardX = (CANVAS_SIZE.w - cardW)/2;
+    const gap = 30, yFx = 320, yMo = yFx + cardH + gap, yYtd = yMo + cardH + gap, yLev = yYtd + cardH + gap;
+
+    const drawRowCard = (y, lbl, valMain, valChange, isPosChange) => {
+        drawRoundRect(ctx, cardX, y, cardW, cardH, 40, C.card_bg, C.border, 5);
+        drawText(ctx, lbl, CX, y + 50, 35, C.text_sub, "center", "middle");
+        if(valChange) {
+            ctx.font = `40px Roboto, sans-serif`;
+            const w1 = ctx.measureText(valMain).width;
+            const w2 = ctx.measureText(valChange).width;
+            const sx = CX - (w1+w2)/2;
+            drawText(ctx, valMain, sx, y + 115, 40, C.text_main, "left", "middle");
+            drawText(ctx, valChange, sx + w1, y + 115, 40, isPosChange ? C.up : C.down, "left", "middle");
+        } else {
+            drawText(ctx, valMain, CX, y + 115, 55, C.text_main, "center", "middle");
+        }
+    };
+
+    const rateDiff = state.exchange_rate - state.prev_exchange_rate;
+    drawRowCard(yFx, "EXCHANGE RATE", `1 USD = ${state.exchange_rate} TWD`, ` (${rateDiff>=0?'▲':'▼'} ${Math.abs(rateDiff).toFixed(3)})`, rateDiff>=0);
+    drawRowCard(yMo, "THIS MONTH ADDED", `$${formatNum(state.monthly_added_twd)} TWD`);
+    drawRowCard(yYtd, "YTD ADDED (Jan-Now)", `$${formatNum(state.ytd_deposit)} TWD`);
+    drawRowCard(yLev, "LEVERAGE RATIO", `${state.leverage_ratio}x`);
+
+    drawFooter(ctx, C);
+};
+
+// UI Logic
+const initApp = async () => {
+    // Populate dropdowns
+    for(let y=2024; y<=2030; y++) { els.year.add(new Option(y, y)); }
+    MONTHS.forEach(m => els.month.add(new Option(m, m)));
+    els.year.value = state.year; els.month.value = state.month;
+    
+    // Load Icon
+    const img = new Image();
+    img.crossOrigin = "Anonymous";
+    img.onload = () => { igIconImg = img; renderCanvas(); };
+    img.src = IG_ICON_URL;
+
+    // Font load wait (heuristic)
+    await document.fonts.ready;
+    
+    updateUIFromState();
+    attachListeners();
+    renderCanvas();
+};
+
+const attachListeners = () => {
+    const inputs = [els.year, els.month, els.us, els.tw, els.usDep, els.twDep, els.moAdded, els.lev, els.rate, els.pTot, els.pUs, els.pTw, els.pRate, els.usr, els.theme, els.layout];
+    inputs.forEach(el => el.addEventListener('change', () => {
+        if (isLoading) return;
+        updateStateFromUI();
+        renderCanvas();
+    }));
+
+    els.year.addEventListener('change', tryAutoLoadRecord);
+    els.month.addEventListener('change', tryAutoLoadRecord);
+
+    els.btnFetchRate.addEventListener('click', async () => {
+        try {
+            showMsg("Fetching rate...");
+            const res = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+            const data = await res.json();
+            els.rate.value = data.rates.TWD;
+            updateStateFromUI();
+            renderCanvas();
+            showMsg(`✅ Rate updated: ${data.rates.TWD}`);
+        } catch(e) { showMsg(`❌ Failed: ${e.message}`); }
+    });
+
+    els.recSel.addEventListener('change', (e) => {
+        if(isLoading) return;
+        const val = e.target.value;
+        const rec = historyRecords.find(r => r.monthId === val);
+        if(rec) {
+            loadRecordToUI(rec);
+            const idx = historyRecords.indexOf(rec);
+            if(idx !== -1 && idx + 1 < historyRecords.length) {
+                els.compSel.value = historyRecords[idx+1].monthId;
+            } else {
+                els.compSel.value = 'Manual';
+            }
+            loadPrevData(els.compSel.value);
+            updateStateFromUI();
+            renderCanvas();
+        }
+    });
+
+    els.compSel.addEventListener('change', (e) => {
+        if(isLoading) return;
+        loadPrevData(e.target.value);
+        updateStateFromUI();
+        renderCanvas();
+    });
+
+    document.getElementById('btnSave').addEventListener('click', () => {
+        const mIdx = MONTHS.indexOf(state.month) + 1;
+        const mStr = mIdx.toString().padStart(2, '0');
+        const monthId = `${state.year}-${mStr}`;
+        const totalVal = Math.floor(state.us_stock * state.exchange_rate + state.tw_stock);
+
+        const newRec = {
+            id: monthId, monthId: monthId, total: String(totalVal),
+            us: String(state.us_stock), tw: String(state.tw_stock),
+            us_deposit: String(state.us_deposit), tw_deposit: String(state.tw_deposit),
+            monthly_added_twd: String(state.monthly_added_twd), leverage_ratio: String(state.leverage_ratio),
+            rate: String(state.exchange_rate), updatedAt: new Date().toISOString()
+        };
+
+        historyRecords = historyRecords.filter(r => r.monthId !== monthId);
+        historyRecords.push(newRec);
+        historyRecords.sort((a,b) => b.monthId.localeCompare(a.monthId));
+        updateSelectors();
+        els.recSel.value = monthId;
+        showMsg(`💾 Saved: ${monthId}`);
+    });
+
+    document.getElementById('btnExport').addEventListener('click', () => {
+        document.getElementById('btnSave').click();
+        const data = { version: 1, createdAt: new Date().toISOString(), records: historyRecords };
+        const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'assets_backup.json';
+        a.click();
+        showMsg(`📥 Exported ${historyRecords.length} records`);
+    });
+
+    document.getElementById('btnImport').addEventListener('click', () => els.fileIn.click());
+    els.fileIn.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+            try {
+                const content = JSON.parse(evt.target.result);
+                if(content.records) {
+                    historyRecords = content.records.sort((a,b) => b.monthId.localeCompare(a.monthId));
+                    updateSelectors();
+                    if(historyRecords.length > 0) {
+                        els.recSel.value = historyRecords[0].monthId;
+                        els.recSel.dispatchEvent(new Event('change'));
+                    }
+                    showMsg(`✅ Imported ${historyRecords.length} records`);
+                }
+            } catch(err) { showMsg(`❌ Import Error`); }
+        };
+        reader.readAsText(file);
+    });
+
+    document.getElementById('btnDownload').addEventListener('click', () => {
+        const l = state.layout;
+        const c = els.combine.checked;
+        const baseName = `Asset_${state.year}_${state.month}`;
+
+        const dlCanvas = (canvasId, name) => {
+            const url = document.getElementById(canvasId).toDataURL('image/png');
+            const a = document.createElement('a'); a.href = url; a.download = name; a.click();
+        };
+
+        if(l === 'Single Page') {
+            dlCanvas('canvas1', `${baseName}.png`);
+        } else if(l === 'Multi Page' && c) {
+            const c1 = document.getElementById('canvas1');
+            const c2 = document.getElementById('canvas2');
+            const combo = document.createElement('canvas');
+            combo.width = CANVAS_SIZE.w; combo.height = CANVAS_SIZE.h * 2;
+            const ctx = combo.getContext('2d');
+            ctx.drawImage(c1, 0, 0); ctx.drawImage(c2, 0, CANVAS_SIZE.h);
+            const a = document.createElement('a'); a.href = combo.toDataURL('image/png'); a.download = `${baseName}_combined.png`; a.click();
+        } else {
+            dlCanvas('canvas1', `${baseName}_cover.png`);
+            setTimeout(() => dlCanvas('canvas2', `${baseName}_detail.png`), 500);
+        }
+    });
+};
+
+const updateStateFromUI = () => {
+    state.year = parseInt(els.year.value);
+    state.month = els.month.value;
+    state.us_stock = parseFloat(els.us.value) || 0;
+    state.tw_stock = parseInt(els.tw.value) || 0;
+    state.us_deposit = parseFloat(els.usDep.value) || 0;
+    state.tw_deposit = parseInt(els.twDep.value) || 0;
+    state.monthly_added_twd = parseInt(els.moAdded.value) || 0;
+    state.leverage_ratio = parseFloat(els.lev.value) || 1.0;
+    state.exchange_rate = parseFloat(els.rate.value) || 32.0;
+    state.prev_total = parseInt(els.pTot.value) || 0;
+    state.prev_us = parseFloat(els.pUs.value) || 0;
+    state.prev_tw = parseInt(els.pTw.value) || 0;
+    state.prev_exchange_rate = parseFloat(els.pRate.value) || 32.0;
+    state.username = els.usr.value;
+    state.theme = els.theme.value;
+    state.layout = els.layout.value;
+
+    const tot = Math.floor(state.us_stock * state.exchange_rate + state.tw_stock);
+    els.totCalc.value = tot;
+
+    // Calc YTD
+    let ytdSum = 0;
+    const mIdx = MONTHS.indexOf(state.month);
+    historyRecords.forEach(r => {
+        const [ry, rm] = r.monthId.split('-');
+        if(parseInt(ry) === state.year && (parseInt(rm)-1) < mIdx) {
+            ytdSum += parseInt(r.monthly_added_twd || 0);
+        }
+    });
+    ytdSum += state.monthly_added_twd;
+    state.ytd_deposit = ytdSum;
+
+    els.wrapCombine.style.display = state.layout === 'Single Page' ? 'none' : 'flex';
+};
+
+const updateUIFromState = () => {
+    els.year.value = state.year; els.month.value = state.month;
+    els.us.value = state.us_stock; els.tw.value = state.tw_stock;
+    els.usDep.value = state.us_deposit; els.twDep.value = state.tw_deposit;
+    els.moAdded.value = state.monthly_added_twd; els.lev.value = state.leverage_ratio;
+    els.rate.value = state.exchange_rate; els.pTot.value = state.prev_total;
+    els.pUs.value = state.prev_us; els.pTw.value = state.prev_tw;
+    els.pRate.value = state.prev_exchange_rate; els.usr.value = state.username;
+    els.theme.value = state.theme; els.layout.value = state.layout;
+    updateStateFromUI();
+};
+
+const renderCanvas = () => {
+    if(state.layout === 'Single Page') {
+        document.getElementById('canvas2').classList.add('hidden');
+        generateImageSingle();
+    } else {
+        document.getElementById('canvas2').classList.remove('hidden');
+        generateImageP1();
+        generateImageP2();
+    }
+};
+
+const loadRecordToUI = (rec) => {
+    isLoading = true;
+    try {
+        const [y, m] = rec.monthId.split('-');
+        els.year.value = y; els.month.value = MONTHS[parseInt(m)-1];
+        els.us.value = rec.us || 0; els.tw.value = rec.tw || 0;
+        els.usDep.value = rec.us_deposit || 0; els.twDep.value = rec.tw_deposit || 0;
+        els.moAdded.value = rec.monthly_added_twd || 0; els.lev.value = rec.leverage_ratio || 1.0;
+        if(rec.rate) els.rate.value = rec.rate;
+    } finally { isLoading = false; }
+};
+
+const loadPrevData = (recId) => {
+    if(!recId || recId === 'Manual') return;
+    const rec = historyRecords.find(r => r.monthId === recId);
+    if(rec) {
+        els.pTot.value = parseInt(rec.total || 0);
+        els.pUs.value = parseFloat(rec.us || 0);
+        els.pTw.value = parseInt(rec.tw || 0);
+        els.pRate.value = parseFloat(rec.rate || 32.5);
+    }
+};
+
+const tryAutoLoadRecord = () => {
+    if(isLoading) return;
+    const mIdx = MONTHS.indexOf(els.month.value) + 1;
+    const mStr = mIdx.toString().padStart(2, '0');
+    const targetId = `${els.year.value}-${mStr}`;
+    const rec = historyRecords.find(r => r.monthId === targetId);
+    if(rec) {
+        els.recSel.value = targetId;
+        els.recSel.dispatchEvent(new Event('change'));
+    }
+};
+
+const updateSelectors = () => {
+    const ids = historyRecords.map(r => r.monthId);
+    els.recSel.innerHTML = '';
+    ids.forEach(id => els.recSel.add(new Option(id, id)));
+    els.compSel.innerHTML = '<option value="Manual">Manual</option>';
+    ids.forEach(id => els.compSel.add(new Option(id, id)));
+};
+
+// Start
+initApp();
+</script>
+</body>
+</html>
