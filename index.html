@@ -536,7 +536,10 @@ const initApp = async () => {
     
     // 讀取獨立快取的 IG ID
     const cachedUsername = localStorage.getItem('assetReportUsername');
-    if (cachedUsername) state.username = cachedUsername;
+    if (cachedUsername) {
+        state.username = cachedUsername;
+        els.usr.value = cachedUsername; // 修正：必須先填入 UI 輸入框，避免稍後被空值覆蓋
+    }
 
     updateSelectors();
 
