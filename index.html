@@ -497,7 +497,32 @@ const initApp = async () => {
     // Populate dropdowns
     for(let y=2024; y<=2030; y++) { els.year.add(new Option(y, y)); }
     MONTHS.forEach(m => els.month.add(new Option(m, m)));
-    els.year.value = state.year; els.month.value = state.month;
+
+    // 1. 從快取中讀取歷史紀錄
+    const cachedHistory = localStorage.getItem('assetReportHistory');
+    if (cachedHistory) {
+        try {
+            historyRecords = JSON.parse(cachedHistory);
+        } catch(e) { console.warn("Failed to parse cached history."); }
+    }
+    updateSelectors();
+
+    // 2. 如果有紀錄，自動載入最新的一筆到畫面上
+    if (historyRecords.length > 0) {
+        const latest = historyRecords[0];
+        loadRecordToUI(latest);
+        els.recSel.value = latest.monthId;
+        if (historyRecords.length > 1) {
+            els.compSel.value = historyRecords[1].monthId;
+            loadPrevData(historyRecords[1].monthId);
+        } else {
+            els.compSel.value = 'Manual';
+        }
+        updateStateFromUI();
+    } else {
+        els.year.value = state.year; els.month.value = state.month;
+        updateUIFromState();
+    }
     
     // Load Icon
     const img = new Image();
@@ -508,7 +533,6 @@ const initApp = async () => {
     // Font load wait (heuristic)
     await document.fonts.ready;
     
-    updateUIFromState();
     attachListeners();
     renderCanvas();
 };
@@ -580,6 +604,10 @@ const attachListeners = () => {
         historyRecords.sort((a,b) => b.monthId.localeCompare(a.monthId));
         updateSelectors();
         els.recSel.value = monthId;
+
+        // 3. 每次儲存時，更新快取資料
+        localStorage.setItem('assetReportHistory', JSON.stringify(historyRecords));
+
         showMsg(`💾 Saved: ${monthId}`);
     });
 
@@ -608,6 +636,10 @@ const attachListeners = () => {
                         els.recSel.value = historyRecords[0].monthId;
                         els.recSel.dispatchEvent(new Event('change'));
                     }
+
+                    // 4. 每次成功匯入時，將資料寫入快取
+                    localStorage.setItem('assetReportHistory', JSON.stringify(historyRecords));
+
                     showMsg(`✅ Imported ${historyRecords.length} records`);
                 }
             } catch(err) { showMsg(`❌ Import Error`); }
