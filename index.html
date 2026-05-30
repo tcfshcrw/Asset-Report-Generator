@@ -533,6 +533,11 @@ const initApp = async () => {
             historyRecords = JSON.parse(cachedHistory);
         } catch(e) { console.warn("Failed to parse cached history."); }
     }
+    
+    // 讀取獨立快取的 IG ID
+    const cachedUsername = localStorage.getItem('assetReportUsername');
+    if (cachedUsername) state.username = cachedUsername;
+
     updateSelectors();
 
     // 2. 如果有紀錄，自動載入最新的一筆到畫面上
@@ -624,7 +629,9 @@ const attachListeners = () => {
             us: String(state.us_stock), tw: String(state.tw_stock),
             us_deposit: String(state.us_deposit), tw_deposit: String(state.tw_deposit),
             monthly_added_twd: String(state.monthly_added_twd), leverage_ratio: String(state.leverage_ratio),
-            rate: String(state.exchange_rate), updatedAt: new Date().toISOString()
+            rate: String(state.exchange_rate),
+            username: state.username,
+            updatedAt: new Date().toISOString()
         };
 
         historyRecords = historyRecords.filter(r => r.monthId !== monthId);
@@ -767,6 +774,7 @@ const updateStateFromUI = () => {
     state.prev_tw = parseInt(els.pTw.value) || 0;
     state.prev_exchange_rate = parseFloat(els.pRate.value) || 32.0;
     state.username = els.usr.value;
+    localStorage.setItem('assetReportUsername', state.username);
     state.theme = els.theme.value;
     state.layout = els.layout.value;
 
@@ -820,6 +828,7 @@ const loadRecordToUI = (rec) => {
         els.usDep.value = rec.us_deposit || 0; els.twDep.value = rec.tw_deposit || 0;
         els.moAdded.value = rec.monthly_added_twd || 0; els.lev.value = rec.leverage_ratio || 1.0;
         if(rec.rate) els.rate.value = rec.rate;
+        if(rec.username) els.usr.value = rec.username;
     } finally { isLoading = false; }
 };
 
