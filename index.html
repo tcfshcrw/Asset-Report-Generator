@@ -367,7 +367,8 @@ const getChartData = () => {
     historyRecords.forEach(r => {
         chartDataMap.set(r.monthId, {
             tw: parseInt(r.tw) || 0,
-            us: (parseFloat(r.us) || 0) * (parseFloat(r.rate) || 32)
+            us: (parseFloat(r.us) || 0) * (parseFloat(r.rate) || 32),
+            updatedAt: r.updatedAt || new Date().toISOString()
         });
     });
 
@@ -375,14 +376,20 @@ const getChartData = () => {
     const currentId = `${state.year}-${mIdx.toString().padStart(2, '0')}`;
     chartDataMap.set(currentId, {
         tw: state.tw_stock,
-        us: state.us_stock * state.exchange_rate
+        us: state.us_stock * state.exchange_rate,
+        updatedAt: state.updatedAt || new Date().toISOString()
     });
 
     let sortedIds = Array.from(chartDataMap.keys()).sort();
-    return sortedIds.map(id => ({ id, ...chartDataMap.get(id) }));
+    return sortedIds.map(id => {
+        const data = chartDataMap.get(id);
+        const d = new Date(data.updatedAt);
+        const dateLabel = `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
+        return { id, label: dateLabel, ...data };
+    });
 };
 
-const drawComboChart = (ctx, cX, cY, cW, cH, chartData, C) => {
+const drawComboChart = (ctx, cX, cY, cW, cH, chartData, C, isUI = false) => {
     const maxVal = Math.max(...chartData.map(d => d.tw + d.us)) * 1.1 || 1;
 
     ctx.strokeStyle = C.border;
@@ -398,10 +405,10 @@ const drawComboChart = (ctx, cX, cY, cW, cH, chartData, C) => {
         x: cX + i * xStep,
         yTw: cY + cH - (d.tw / maxVal) * cH,
         yTot: cY + cH - ((d.tw + d.us) / maxVal) * cH,
-        label: d.id
+        label: d.label
     }));
 
-    const barW = Math.min(xStep * 0.4, 40);
+    const barW = Math.min(xStep * 0.4, isUI ? 25 : 40);
 
     // 1. 繪製疊加直條圖 (Stacked Bars)
     pts.forEach((p) => {
@@ -417,27 +424,26 @@ const drawComboChart = (ctx, cX, cY, cW, cH, chartData, C) => {
     // 2. 繪製折線圖 (僅連線總資產最高點)
     ctx.beginPath();
     pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.yTot) : ctx.lineTo(p.x, p.yTot));
-    ctx.strokeStyle = "#3b82f6"; ctx.lineWidth = 3; ctx.stroke();
+    ctx.strokeStyle = "#3b82f6"; ctx.lineWidth = isUI ? 2 : 3; ctx.stroke();
 
-    // 3. 繪製節點與標籤
-    const stepLabel = Math.max(1, Math.ceil(pts.length / 8));
+    // 3. 繪製節點與標籤 (使用資料編輯日期作為 X 軸)
+    const stepLabel = Math.max(1, Math.ceil(pts.length / (isUI ? 6 : 8)));
     pts.forEach((p, i) => {
-        ctx.beginPath(); ctx.arc(p.x, p.yTot, 5, 0, Math.PI*2);
+        ctx.beginPath(); ctx.arc(p.x, p.yTot, isUI ? 3.5 : 5, 0, Math.PI*2);
         ctx.fillStyle = C.card_bg; ctx.fill();
-        ctx.strokeStyle = "#3b82f6"; ctx.lineWidth = 2.5; ctx.stroke();
+        ctx.strokeStyle = "#3b82f6"; ctx.lineWidth = isUI ? 2 : 2.5; ctx.stroke();
 
         if (i % stepLabel === 0 || i === pts.length - 1) {
-            const [y, m] = p.label.split('-');
-            drawText(ctx, `${m}/${y.slice(2)}`, p.x, cY + cH + 25, 24, C.text_sub, "center", "middle");
+            drawText(ctx, p.label, p.x, cY + cH + (isUI ? 20 : 25), isUI ? 14 : 24, C.text_sub, "center", "middle");
         }
     });
 
-    // 4. 繪製 Y 軸標籤與輔助橫線
+    // 4. 繪製 Y 軸標籤與輔助橫線 (格式化為"M"單位並放大字體)
     ctx.textAlign = "right";
     for(let i=0; i<=3; i++) {
         const v = maxVal * (i/3);
         const y = cY + cH - (i/3)*cH;
-        drawText(ctx, `${(v/1000000).toFixed(1)}M`, cX - 20, y, 28, C.text_sub, "right", "middle");
+        drawText(ctx, `${(v/1000000).toFixed(1)}M`, cX - (isUI ? 12 : 20), y, isUI ? 16 : 28, C.text_sub, "right", "middle");
         if(i > 0) { 
             ctx.beginPath(); ctx.moveTo(cX, y); ctx.lineTo(cX+cW, y);
             ctx.strokeStyle = C.border; ctx.lineWidth = 1;
@@ -455,8 +461,7 @@ const renderUIChart = () => {
     ctx.clearRect(0, 0, c.width, c.height);
 
     const chartData = getChartData();
-    // 修改左邊距為 80，確保大字體可以完整顯示不被截斷
-    drawComboChart(ctx, 80, 20, c.width - 110, c.height - 60, chartData, C);
+    drawComboChart(ctx, 80, 20, c.width - 110, c.height - 60, chartData, C, true);
 };
 
 const generateImageSingle = () => {
