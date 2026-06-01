@@ -83,7 +83,8 @@
                     <div class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-blue-500"></span><span class="text-gray-600 dark:text-gray-400">US Stock</span></div>
                 </div>
             </div>
-            <canvas id="uiChartCanvas" width="800" height="320" class="w-full h-auto"></canvas>
+            <!-- 調整 UI Canvas 的比例以符合大字體的空間需求 -->
+            <canvas id="uiChartCanvas" width="880" height="380" class="w-full h-auto"></canvas>
         </div>
 
         <div class="space-y-6">
@@ -384,12 +385,12 @@ const getChartData = () => {
     return sortedIds.map(id => {
         const data = chartDataMap.get(id);
         const d = new Date(data.updatedAt);
-        const dateLabel = `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
+        const dateLabel = MONTHS[d.getMonth()].substring(0, 3); // 英文月份縮寫
         return { id, label: dateLabel, ...data };
     });
 };
 
-const drawComboChart = (ctx, cX, cY, cW, cH, chartData, C, isUI = false) => {
+const drawComboChart = (ctx, cX, cY, cW, cH, chartData, C) => {
     const maxVal = Math.max(...chartData.map(d => d.tw + d.us)) * 1.1 || 1;
 
     ctx.strokeStyle = C.border;
@@ -408,7 +409,7 @@ const drawComboChart = (ctx, cX, cY, cW, cH, chartData, C, isUI = false) => {
         label: d.label
     }));
 
-    const barW = Math.min(xStep * 0.4, isUI ? 25 : 40);
+    const barW = Math.min(xStep * 0.4, 40);
 
     // 1. 繪製疊加直條圖 (Stacked Bars)
     pts.forEach((p) => {
@@ -424,26 +425,26 @@ const drawComboChart = (ctx, cX, cY, cW, cH, chartData, C, isUI = false) => {
     // 2. 繪製折線圖 (僅連線總資產最高點)
     ctx.beginPath();
     pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.yTot) : ctx.lineTo(p.x, p.yTot));
-    ctx.strokeStyle = "#3b82f6"; ctx.lineWidth = isUI ? 2 : 3; ctx.stroke();
+    ctx.strokeStyle = "#3b82f6"; ctx.lineWidth = 3; ctx.stroke();
 
-    // 3. 繪製節點與標籤 (使用資料編輯日期作為 X 軸)
-    const stepLabel = Math.max(1, Math.ceil(pts.length / (isUI ? 6 : 8)));
+    // 3. 繪製節點與標籤 (使用英文月份縮寫作為 X 軸)
+    const stepLabel = Math.max(1, Math.ceil(pts.length / 8));
     pts.forEach((p, i) => {
-        ctx.beginPath(); ctx.arc(p.x, p.yTot, isUI ? 3.5 : 5, 0, Math.PI*2);
+        ctx.beginPath(); ctx.arc(p.x, p.yTot, 5, 0, Math.PI*2);
         ctx.fillStyle = C.card_bg; ctx.fill();
-        ctx.strokeStyle = "#3b82f6"; ctx.lineWidth = isUI ? 2 : 2.5; ctx.stroke();
+        ctx.strokeStyle = "#3b82f6"; ctx.lineWidth = 2.5; ctx.stroke();
 
         if (i % stepLabel === 0 || i === pts.length - 1) {
-            drawText(ctx, p.label, p.x, cY + cH + (isUI ? 20 : 25), isUI ? 14 : 24, C.text_sub, "center", "middle");
+            drawText(ctx, p.label, p.x, cY + cH + 25, 24, C.text_sub, "center", "middle");
         }
     });
 
-    // 4. 繪製 Y 軸標籤與輔助橫線 (格式化為"M"單位並放大字體)
+    // 4. 繪製 Y 軸標籤與輔助橫線
     ctx.textAlign = "right";
     for(let i=0; i<=3; i++) {
         const v = maxVal * (i/3);
         const y = cY + cH - (i/3)*cH;
-        drawText(ctx, `${(v/1000000).toFixed(1)}M`, cX - (isUI ? 12 : 20), y, isUI ? 16 : 28, C.text_sub, "right", "middle");
+        drawText(ctx, `${(v/1000000).toFixed(1)}M`, cX - 20, y, 28, C.text_sub, "right", "middle");
         if(i > 0) { 
             ctx.beginPath(); ctx.moveTo(cX, y); ctx.lineTo(cX+cW, y);
             ctx.strokeStyle = C.border; ctx.lineWidth = 1;
@@ -461,7 +462,8 @@ const renderUIChart = () => {
     ctx.clearRect(0, 0, c.width, c.height);
 
     const chartData = getChartData();
-    drawComboChart(ctx, 80, 20, c.width - 110, c.height - 60, chartData, C, true);
+    // 修改參數以完美配合統一的 drawComboChart 繪製屬性 (確保 UI 面板不被裁切字體)
+    drawComboChart(ctx, 100, 40, c.width - 140, c.height - 100, chartData, C);
 };
 
 const generateImageSingle = () => {
