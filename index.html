@@ -8,7 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            darkMode: 'class', // 啟用 Tailwind 透過 class 控制深色模式
+            darkMode: 'class', 
         }
     </script>
     <!-- Google Fonts -->
@@ -19,7 +19,6 @@
         canvas { max-width: 100%; height: auto; }
     </style>
     <script>
-        // Inline PWA Manifest Configuration
         const iconSvg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='110' fill='%233b82f6'/%3E%3Crect x='110' y='320' width='60' height='90' rx='15' fill='%23ffffff' opacity='0.6'/%3E%3Crect x='226' y='230' width='60' height='180' rx='15' fill='%23ffffff' opacity='0.8'/%3E%3Crect x='342' y='120' width='60' height='290' rx='15' fill='%23ffffff'/%3E%3Cpath d='M 140 330 L 256 240 L 372 130' stroke='%23fcd34d' stroke-width='30' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3Ccircle cx='372' cy='130' r='25' fill='%23fcd34d'/%3E%3C/svg%3E";
 
         const manifest = {
@@ -41,7 +40,6 @@
         document.write(`<link rel="icon" type="image/svg+xml" href="${iconSvg}">`);
         document.write(`<link rel="apple-touch-icon" href="${iconSvg}">`);
 
-        // Inline Service Worker for PWA setup
         const swCode = `
             self.addEventListener('install', (e) => { self.skipWaiting(); });
             self.addEventListener('activate', (e) => { e.waitUntil(clients.claim()); });
@@ -234,7 +232,6 @@
     <div class="lg:col-span-7 bg-gray-200 dark:bg-gray-800 p-6 rounded-xl border border-gray-300 dark:border-gray-700 flex flex-col items-center justify-start overflow-hidden transition-colors duration-300">
         <h2 class="text-xl font-bold mb-4 w-full text-left">Preview</h2>
         <div id="previewContainer" class="flex flex-col gap-4 justify-center items-center w-full overflow-x-auto">
-            <!-- 確保 Canvas 元素完美存在，以供預覽使用 -->
             <canvas id="canvas1" class="canvas-container" width="1080" height="1350"></canvas>
             <canvas id="canvas2" class="canvas-container hidden" width="1080" height="1350"></canvas>
         </div>
@@ -256,7 +253,8 @@ let state = {
     year: 2026, month: "January", us_stock: 35000.0, tw_stock: 1200000, us_deposit: 500.0, tw_deposit: 20000,
     monthly_added_twd: 36250, exchange_rate: 32.5, prev_total: 2300000, prev_us: 34000.0, prev_tw: 1150000,
     ytd_deposit: 0, prev_exchange_rate: 32.0, leverage_ratio: 1.0, username: "", theme: "system", layout: "Multi Page",
-    actual_theme: "light" // 內部紀錄實際繪圖與 UI 使用的主題
+    actual_theme: "light",
+    updatedAt: new Date().toISOString()
 };
 let historyRecords = [];
 let isLoading = false;
@@ -271,6 +269,10 @@ const calcGrowth = (prev, curr) => {
     return { diff, str: `${sign}${Math.floor(diff).toLocaleString('en-US')}`, pct: `${pct.toFixed(1)}%` };
 };
 const showMsg = (msg) => { document.getElementById('statusMsg').innerText = msg; setTimeout(() => document.getElementById('statusMsg').innerText = '', 3000); };
+const getDisplayDate = () => {
+    const d = new Date(state.updatedAt);
+    return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+};
 
 const els = {
     year: document.getElementById('inYear'), month: document.getElementById('inMonth'),
@@ -358,7 +360,7 @@ const drawFooter = (ctx, C, signatureYOffset = 100) => {
 };
 
 // ==========================================
-// 趨勢組合圖（直條疊加＋折線頂部）共用繪製函數
+// 趨勢組合圖（直條疊加＋總資產折線頂部）共用繪製函數
 // ==========================================
 const getChartData = () => {
     let chartDataMap = new Map();
@@ -369,7 +371,6 @@ const getChartData = () => {
         });
     });
 
-    // 確保即時反映 UI 當下編輯的數據
     const mIdx = MONTHS.indexOf(state.month) + 1;
     const currentId = `${state.year}-${mIdx.toString().padStart(2, '0')}`;
     chartDataMap.set(currentId, {
@@ -381,10 +382,9 @@ const getChartData = () => {
     return sortedIds.map(id => ({ id, ...chartDataMap.get(id) }));
 };
 
-const drawComboChart = (ctx, cX, cY, cW, cH, chartData, C, isUI = false) => {
+const drawComboChart = (ctx, cX, cY, cW, cH, chartData, C) => {
     const maxVal = Math.max(...chartData.map(d => d.tw + d.us)) * 1.1 || 1;
 
-    // 繪製背景格線
     ctx.strokeStyle = C.border;
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -401,52 +401,43 @@ const drawComboChart = (ctx, cX, cY, cW, cH, chartData, C, isUI = false) => {
         label: d.id
     }));
 
-    const barW = Math.min(xStep * 0.4, isUI ? 25 : 40);
+    const barW = Math.min(xStep * 0.4, 40);
 
     // 1. 繪製疊加直條圖 (Stacked Bars)
     pts.forEach((p) => {
-        // 台股直條圖 (Green)
         const twH = (cY + cH) - p.yTw;
         ctx.fillStyle = "rgba(16, 185, 129, 0.4)";
         ctx.fillRect(p.x - barW/2, p.yTw, barW, twH);
 
-        // 美股直條圖 (Blue) 疊加在台股上方
         const usH = p.yTw - p.yTot;
         ctx.fillStyle = "rgba(59, 130, 246, 0.4)";
         ctx.fillRect(p.x - barW/2, p.yTot, barW, usH);
     });
 
-    // 2. 繪製折線圖 (Lines connecting the peaks)
-    // 台股頂點連線
-    ctx.beginPath();
-    pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.yTw) : ctx.lineTo(p.x, p.yTw));
-    ctx.strokeStyle = "#10b981"; ctx.lineWidth = isUI ? 2 : 3; ctx.stroke();
-
-    // 總資產頂點連線 (即為美股直條圖的最高點)
+    // 2. 繪製折線圖 (僅連線總資產最高點)
     ctx.beginPath();
     pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.yTot) : ctx.lineTo(p.x, p.yTot));
-    ctx.strokeStyle = "#3b82f6"; ctx.lineWidth = isUI ? 2 : 3; ctx.stroke();
+    ctx.strokeStyle = "#3b82f6"; ctx.lineWidth = 3; ctx.stroke();
 
     // 3. 繪製節點與標籤
-    const stepLabel = Math.max(1, Math.ceil(pts.length / (isUI ? 6 : 8)));
+    const stepLabel = Math.max(1, Math.ceil(pts.length / 8));
     pts.forEach((p, i) => {
-        ctx.beginPath(); ctx.arc(p.x, p.yTot, isUI ? 3.5 : 5, 0, Math.PI*2);
+        ctx.beginPath(); ctx.arc(p.x, p.yTot, 5, 0, Math.PI*2);
         ctx.fillStyle = C.card_bg; ctx.fill();
-        ctx.strokeStyle = "#3b82f6"; ctx.lineWidth = isUI ? 2 : 2.5; ctx.stroke();
+        ctx.strokeStyle = "#3b82f6"; ctx.lineWidth = 2.5; ctx.stroke();
 
-        // X軸標籤
         if (i % stepLabel === 0 || i === pts.length - 1) {
             const [y, m] = p.label.split('-');
-            drawText(ctx, `${m}/${y.slice(2)}`, p.x, cY + cH + (isUI ? 20 : 25), isUI ? 12 : 20, C.text_sub, "center", "middle");
+            drawText(ctx, `${m}/${y.slice(2)}`, p.x, cY + cH + 25, 24, C.text_sub, "center", "middle");
         }
     });
 
-    // 4. 繪製 Y 軸標籤與輔助橫線 (格式化為"M"單位)
+    // 4. 繪製 Y 軸標籤與輔助橫線
     ctx.textAlign = "right";
     for(let i=0; i<=3; i++) {
         const v = maxVal * (i/3);
         const y = cY + cH - (i/3)*cH;
-        drawText(ctx, `${(v/1000000).toFixed(1)}M`, cX - (isUI ? 10 : 15), y, isUI ? 12 : 20, C.text_sub, "right", "middle");
+        drawText(ctx, `${(v/1000000).toFixed(1)}M`, cX - 20, y, 28, C.text_sub, "right", "middle");
         if(i > 0) { 
             ctx.beginPath(); ctx.moveTo(cX, y); ctx.lineTo(cX+cW, y);
             ctx.strokeStyle = C.border; ctx.lineWidth = 1;
@@ -461,12 +452,11 @@ const renderUIChart = () => {
     const ctx = c.getContext('2d');
     const C = COLORS[state.actual_theme];
     
-    // 清空 Canvas 以便重新繪圖
     ctx.clearRect(0, 0, c.width, c.height);
 
     const chartData = getChartData();
-    // 給予 UI Canvas 適合的邊距
-    drawComboChart(ctx, 60, 20, c.width - 90, c.height - 60, chartData, C, true);
+    // 修改左邊距為 80，確保大字體可以完整顯示不被截斷
+    drawComboChart(ctx, 80, 20, c.width - 110, c.height - 60, chartData, C);
 };
 
 const generateImageSingle = () => {
@@ -475,7 +465,7 @@ const generateImageSingle = () => {
     const C = COLORS[state.actual_theme];
     drawBackground(ctx, C);
 
-    const title = `${state.month.substring(0,3)} ${state.year} ASSET REPORT`;
+    const title = `${getDisplayDate()} ASSET REPORT`;
     const currentTotal = Math.floor(state.us_stock * state.exchange_rate + state.tw_stock);
     const CX = CANVAS_SIZE.w / 2;
 
@@ -509,9 +499,9 @@ const generateImageSingle = () => {
     const cardW = 440, cardH = 360, gridY = 660, gGap = 40;
     const leftX = CX - cardW - gGap/2, rightX = CX + gGap/2;
 
-    const drawCard = (x, title, val, dep, pVal) => {
+    const drawCard = (x, cardTitle, val, dep, pVal) => {
         drawRoundRect(ctx, x, gridY, cardW, cardH, 40, C.card_bg, C.border, 5);
-        drawText(ctx, title, x + 40, gridY + 60, 45, C.text_sub, "left", "middle");
+        drawText(ctx, cardTitle, x + 40, gridY + 60, 45, C.text_sub, "left", "middle");
         drawText(ctx, formatNum(val), x + 40, gridY + 150, 60, C.text_main, "left", "middle");
         if(dep > 0) drawText(ctx, `Dep: +${formatNum(dep)}`, x + 40, gridY + 230, 25, C.text_sub, "left", "middle");
         const g = calcGrowth(pVal, val);
@@ -534,7 +524,7 @@ const generateImageSingle = () => {
     drawText(ctx, ` (${rPos ? '▲' : '▼'} ${Math.abs(rateDiff).toFixed(3)})`, alignX + rW, lineY + 40, 30, rPos ? C.up : C.down, "left", "middle");
 
     drawText(ctx, `THIS MONTH ADDED: $${formatNum(state.monthly_added_twd)} TWD`, alignX, lineY + 80, 30, C.text_sub, "left", "middle");
-    drawText(ctx, `YTD ADDED (Jan-Now): $${formatNum(state.ytd_deposit)} TWD`, alignX, lineY + 120, 30, C.text_sub, "left", "middle");
+    drawText(ctx, `YTD ADDED: $${formatNum(state.ytd_deposit)} TWD`, alignX, lineY + 120, 30, C.text_sub, "left", "middle");
     drawText(ctx, `LEVERAGE RATIO: ${state.leverage_ratio}x`, alignX, lineY + 160, 30, C.text_sub, "left", "middle");
 };
 
@@ -544,7 +534,7 @@ const generateImageP1 = () => {
     const C = COLORS[state.actual_theme];
     drawBackground(ctx, C);
 
-    const title = `${state.month.substring(0,3)} ${state.year} ASSET REPORT`;
+    const title = `${getDisplayDate()} ASSET REPORT`;
     const currentTotal = Math.floor(state.us_stock * state.exchange_rate + state.tw_stock);
     const CX = CANVAS_SIZE.w / 2;
 
@@ -578,9 +568,9 @@ const generateImageP1 = () => {
     const cardW = 440, cardH = 360, gridY = 690, gGap = 40;
     const leftX = CX - cardW - gGap/2, rightX = CX + gGap/2;
 
-    const drawCard = (x, title, val, dep, pVal) => {
+    const drawCard = (x, cardTitle, val, dep, pVal) => {
         drawRoundRect(ctx, x, gridY, cardW, cardH, 40, C.card_bg, C.border, 5);
-        drawText(ctx, title, x + 40, gridY + 60, 45, C.text_sub, "left", "middle");
+        drawText(ctx, cardTitle, x + 40, gridY + 60, 45, C.text_sub, "left", "middle");
         drawText(ctx, formatNum(val), x + 40, gridY + 150, 60, C.text_main, "left", "middle");
         if(dep > 0) drawText(ctx, `Dep: +${formatNum(dep)}`, x + 40, gridY + 230, 25, C.text_sub, "left", "middle");
         const g = calcGrowth(pVal, val);
@@ -600,7 +590,7 @@ const generateImageP2 = () => {
     const C = COLORS[state.actual_theme];
     drawBackground(ctx, C);
 
-    const title = `${state.month.substring(0,3)} ${state.year} Details`;
+    const title = `${getDisplayDate()} DETAILS`;
     const CX = CANVAS_SIZE.w / 2;
 
     drawText(ctx, title, CX, 100, 60, C.text_main, "center", "top");
@@ -635,12 +625,10 @@ const generateImageP2 = () => {
     drawGridCard(startX, yRow2, "THIS MONTH ADDED", `$${formatNum(state.monthly_added_twd)} TWD`);
     drawGridCard(rightX, yRow2, "YTD ADDED", `$${formatNum(state.ytd_deposit)} TWD`);
 
-    // 加入趨勢組合圖 (Stacked Bar + Line) 卡片
     const yTrend = 680, trendH = 380, trendW = 880;
     drawRoundRect(ctx, startX, yTrend, trendW, trendH, 40, C.card_bg, C.border, 5);
     drawText(ctx, "ASSET TREND", startX + 50, yTrend + 50, 32, C.text_sub, "left", "middle");
 
-    // 繪製圖例 (Legend)
     const lx1 = startX + trendW - 200, lx2 = startX + trendW - 100, ly = yTrend + 50;
     drawRoundRect(ctx, lx1, ly - 10, 15, 15, 3, "#10b981");
     drawText(ctx, "TW", lx1 + 25, ly - 2, 22, C.text_sub, "left", "middle");
@@ -649,7 +637,7 @@ const generateImageP2 = () => {
 
     const chartData = getChartData();
     const cX = startX + 100, cY = yTrend + 100, cW = trendW - 140, cH = trendH - 160;
-    drawComboChart(ctx, cX, cY, cW, cH, chartData, C, false);
+    drawComboChart(ctx, cX, cY, cW, cH, chartData, C);
 
     drawFooter(ctx, C, 100);
 };
@@ -685,7 +673,6 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () 
 
 // UI Logic
 const initApp = async () => {
-    // Populate dropdowns
     for(let y=2024; y<=2030; y++) { els.year.add(new Option(y, y)); }
     MONTHS.forEach(m => els.month.add(new Option(m, m)));
 
@@ -805,6 +792,8 @@ const attachListeners = () => {
         const monthId = `${state.year}-${mStr}`;
         const totalVal = Math.floor(state.us_stock * state.exchange_rate + state.tw_stock);
 
+        state.updatedAt = new Date().toISOString(); 
+
         const newRec = {
             id: monthId, monthId: monthId, total: String(totalVal),
             us: String(state.us_stock), tw: String(state.tw_stock),
@@ -812,7 +801,7 @@ const attachListeners = () => {
             monthly_added_twd: String(state.monthly_added_twd), leverage_ratio: String(state.leverage_ratio),
             rate: String(state.exchange_rate),
             username: state.username,
-            updatedAt: new Date().toISOString()
+            updatedAt: state.updatedAt
         };
 
         historyRecords = historyRecords.filter(r => r.monthId !== monthId);
@@ -1001,7 +990,7 @@ const renderCanvas = () => {
         generateImageP1();
         generateImageP2();
     }
-    renderUIChart(); // 同步更新 UI 組合圖表
+    renderUIChart(); 
 };
 
 const loadRecordToUI = (rec) => {
@@ -1014,6 +1003,7 @@ const loadRecordToUI = (rec) => {
         els.moAdded.value = rec.monthly_added_twd || 0; els.lev.value = rec.leverage_ratio || 1.0;
         if(rec.rate) els.rate.value = rec.rate;
         if(rec.username) els.usr.value = rec.username;
+        state.updatedAt = rec.updatedAt || new Date().toISOString(); 
     } finally { isLoading = false; }
 };
 
@@ -1048,7 +1038,6 @@ const updateSelectors = () => {
     ids.forEach(id => els.compSel.add(new Option(id, id)));
 };
 
-// Start App
 initApp();
 </script>
 </body>
