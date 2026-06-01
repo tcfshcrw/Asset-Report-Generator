@@ -3,13 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IG Asset Report Generator</title>
+    <title>ASSET REPORT GENERATOR</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class', // 啟用 Tailwind 透過 class 控制深色模式
+        }
+    </script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        body { font-family: 'Inter', sans-serif; }
         .canvas-container { max-width: 100%; height: auto; border-radius: 0.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
         canvas { max-width: 100%; height: auto; }
     </style>
@@ -51,132 +56,145 @@
         }
     </script>
 </head>
-<body class="text-gray-800 p-4 md:p-8">
+<body class="text-gray-800 dark:text-gray-100 bg-gray-50 dark:bg-gray-900 p-4 md:p-8 transition-colors duration-300">
 
 <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
     <!-- Controls Panel -->
-    <div class="lg:col-span-5 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-        <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">📊 IG Asset Report Generator</h2>
+    <div class="lg:col-span-5 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 transition-colors duration-300">
+        <div class="mb-6">
+            <h2 class="text-2xl font-bold flex items-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="w-8 h-8 drop-shadow-sm">
+                    <rect width="512" height="512" rx="110" fill="#3b82f6"/>
+                    <rect x="110" y="320" width="60" height="90" rx="15" fill="#ffffff" opacity="0.6"/>
+                    <rect x="226" y="230" width="60" height="180" rx="15" fill="#ffffff" opacity="0.8"/>
+                    <rect x="342" y="120" width="60" height="290" rx="15" fill="#ffffff"/>
+                    <path d="M 140 330 L 256 240 L 372 130" stroke="#fcd34d" stroke-width="30" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    <circle cx="372" cy="130" r="25" fill="#fcd34d"/>
+                </svg>
+                ASSET REPORT GENERATOR
+            </h2>
+            <div class="text-sm text-gray-500 dark:text-gray-400 mt-1 ml-11 font-medium tracking-wide">v0.0.0.1</div>
+        </div>
 
         <div class="space-y-6">
             <!-- Data Management -->
             <section>
-                <h3 class="font-bold border-b pb-2 mb-3">Data Management</h3>
+                <h3 class="font-bold border-b dark:border-gray-700 pb-2 mb-3">Data Management</h3>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm text-gray-600 mb-1">📅 Select Month:</label>
-                        <select id="recordSelector" class="w-full p-2 border rounded-md"></select>
+                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Select Month:</label>
+                        <select id="recordSelector" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"></select>
                     </div>
                     <div>
-                        <label class="block text-sm text-gray-600 mb-1">📉 Compare With:</label>
-                        <select id="compareSelect" class="w-full p-2 border rounded-md"></select>
+                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Compare With:</label>
+                        <select id="compareSelect" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"></select>
                     </div>
                 </div>
             </section>
 
             <!-- Current Data Editor -->
             <section>
-                <h3 class="font-bold border-b pb-2 mb-3">📝 Current Data Editor</h3>
+                <h3 class="font-bold border-b dark:border-gray-700 pb-2 mb-3">Current Data Editor</h3>
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
-                        <label class="block text-sm text-gray-600 mb-1">Year:</label>
-                        <select id="inYear" class="w-full p-2 border rounded-md"></select>
+                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Year:</label>
+                        <select id="inYear" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"></select>
                     </div>
                     <div>
-                        <label class="block text-sm text-gray-600 mb-1">Month:</label>
-                        <select id="inMonth" class="w-full p-2 border rounded-md"></select>
+                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Month:</label>
+                        <select id="inMonth" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"></select>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
-                        <label class="block text-sm text-gray-600 mb-1">🇺🇸 US ($):</label>
-                        <input type="number" id="inUs" class="w-full p-2 border rounded-md" step="0.01">
+                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">US ($):</label>
+                        <input type="number" id="inUs" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700" step="0.01">
                     </div>
                     <div>
-                        <label class="block text-sm text-gray-600 mb-1">🇹🇼 TW (NT):</label>
-                        <input type="number" id="inTw" class="w-full p-2 border rounded-md">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block text-sm text-gray-600 mb-1">📥 US Deposit:</label>
-                        <input type="number" id="inUsDep" class="w-full p-2 border rounded-md" step="0.01">
-                    </div>
-                    <div>
-                        <label class="block text-sm text-gray-600 mb-1">📥 TW Deposit:</label>
-                        <input type="number" id="inTwDep" class="w-full p-2 border rounded-md">
+                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">TW (NT):</label>
+                        <input type="number" id="inTw" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700">
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
-                        <label class="block text-sm text-gray-600 mb-1">💰 Monthly Added (TWD):</label>
-                        <input type="number" id="inMonthlyAdded" class="w-full p-2 border rounded-md">
+                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">US Deposit:</label>
+                        <input type="number" id="inUsDep" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700" step="0.01">
                     </div>
                     <div>
-                        <label class="block text-sm text-gray-600 mb-1">⚖️ Leverage:</label>
-                        <input type="number" id="inLeverage" class="w-full p-2 border rounded-md" step="0.1">
+                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">TW Deposit:</label>
+                        <input type="number" id="inTwDep" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Monthly Added (TWD):</label>
+                        <input type="number" id="inMonthlyAdded" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Leverage:</label>
+                        <input type="number" id="inLeverage" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700" step="0.1">
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4 mb-4 items-end">
                     <div>
-                        <label class="block text-sm text-gray-600 mb-1">💱 Rate:</label>
-                        <input type="number" id="inRate" class="w-full p-2 border rounded-md" step="0.01">
+                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Rate:</label>
+                        <input type="number" id="inRate" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700" step="0.01">
                     </div>
-                    <button id="btnFetchRate" class="bg-blue-100 text-blue-700 p-2 rounded-md font-semibold hover:bg-blue-200 transition">🔄 Get Rate</button>
+                    <button id="btnFetchRate" class="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 p-2 rounded-md font-semibold hover:bg-blue-200 dark:hover:bg-blue-800 transition">Get Rate</button>
                 </div>
                 
                 <div class="mb-4">
-                    <label class="block text-sm text-gray-600 mb-1">💰 Calc Total:</label>
-                    <input type="number" id="inTotalCalc" class="w-full p-2 border rounded-md bg-gray-50" readonly>
+                    <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Calc Total:</label>
+                    <input type="number" id="inTotalCalc" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-600" readonly>
                 </div>
 
-                <p class="text-xs text-gray-500 mb-2 italic">Previous data (Auto-filled by comparison):</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-2 italic">Previous data (Auto-filled by comparison):</p>
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
-                        <label class="block text-sm text-gray-600 mb-1">Prev Total:</label>
-                        <input type="number" id="inPrevTotal" class="w-full p-2 border rounded-md">
+                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Prev Total:</label>
+                        <input type="number" id="inPrevTotal" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700">
                     </div>
                     <div>
-                        <label class="block text-sm text-gray-600 mb-1">Prev US:</label>
-                        <input type="number" id="inPrevUs" class="w-full p-2 border rounded-md" step="0.01">
+                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Prev US:</label>
+                        <input type="number" id="inPrevUs" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700" step="0.01">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
-                        <label class="block text-sm text-gray-600 mb-1">Prev TW:</label>
-                        <input type="number" id="inPrevTw" class="w-full p-2 border rounded-md">
+                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Prev TW:</label>
+                        <input type="number" id="inPrevTw" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700">
                     </div>
                     <div>
-                        <label class="block text-sm text-gray-600 mb-1">Prev Rate:</label>
-                        <input type="number" id="inPrevRate" class="w-full p-2 border rounded-md" step="0.01">
+                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Prev Rate:</label>
+                        <input type="number" id="inPrevRate" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700" step="0.01">
                     </div>
                 </div>
                 
-                <button id="btnSave" class="w-full bg-blue-600 text-white p-2 rounded-md font-bold hover:bg-blue-700 transition">💾 Save Record</button>
+                <button id="btnSave" class="w-full bg-blue-600 text-white p-2 rounded-md font-bold hover:bg-blue-700 transition">Save Record</button>
             </section>
 
             <!-- Settings -->
             <section>
-                <h3 class="font-bold border-b pb-2 mb-3">⚙️ Settings</h3>
+                <h3 class="font-bold border-b dark:border-gray-700 pb-2 mb-3">Settings</h3>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                        <label class="block text-sm text-gray-600 mb-1">IG ID:</label>
-                        <input type="text" id="inUsername" placeholder="Optional" class="w-full p-2 border rounded-md">
+                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">IG ID:</label>
+                        <input type="text" id="inUsername" placeholder="Optional" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700">
                     </div>
                     <div>
-                        <label class="block text-sm text-gray-600 mb-1">Theme:</label>
-                        <select id="inTheme" class="w-full p-2 border rounded-md">
+                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Theme:</label>
+                        <select id="inTheme" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700">
                             <option value="light">Light</option>
                             <option value="dark">Dark</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm text-gray-600 mb-1">Layout:</label>
-                        <select id="inLayout" class="w-full p-2 border rounded-md">
+                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Layout:</label>
+                        <select id="inLayout" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700">
                             <option value="Multi Page">Multi Page</option>
                             <option value="Single Page">Single Page</option>
                         </select>
@@ -185,26 +203,27 @@
             </section>
 
             <!-- Actions -->
-            <div class="flex flex-wrap gap-2 pt-4 border-t">
-                <button id="btnImport" class="bg-yellow-500 text-white px-4 py-2 rounded-md font-semibold hover:bg-yellow-600 transition">📤 Import JSON</button>
-                <button id="btnExport" class="bg-teal-500 text-white px-4 py-2 rounded-md font-semibold hover:bg-teal-600 transition">📥 Export JSON</button>
-                <button id="btnDownload" class="bg-green-600 text-white px-4 py-2 rounded-md font-semibold hover:bg-green-700 transition">🖼️ Download Images</button>
+            <div class="flex flex-wrap gap-2 pt-4 border-t dark:border-gray-700">
+                <button id="btnImport" class="bg-yellow-500 text-white px-4 py-2 rounded-md font-semibold hover:bg-yellow-600 transition">Import JSON</button>
+                <button id="btnExport" class="bg-teal-500 text-white px-4 py-2 rounded-md font-semibold hover:bg-teal-600 transition">Export JSON</button>
+                <button id="btnDownload" class="bg-green-600 text-white px-4 py-2 rounded-md font-semibold hover:bg-green-700 transition">Download Images</button>
                 <div class="flex items-center ml-2" id="wrapCombine">
                     <input type="checkbox" id="inCombine" class="mr-2">
                     <label for="inCombine" class="text-sm">Merge as one image</label>
                 </div>
                 <input type="file" id="fileInput" accept=".json" class="hidden">
             </div>
-            <div id="statusMsg" class="text-sm text-gray-500 mt-2 h-4"></div>
+            <div id="statusMsg" class="text-sm text-gray-500 dark:text-gray-400 mt-2 h-4"></div>
         </div>
     </div>
 
     <!-- Preview Panel -->
-    <div class="lg:col-span-7 bg-gray-200 p-6 rounded-xl border border-gray-300 flex flex-col items-center justify-start overflow-hidden">
+    <div class="lg:col-span-7 bg-gray-200 dark:bg-gray-800 p-6 rounded-xl border border-gray-300 dark:border-gray-700 flex flex-col items-center justify-start overflow-hidden transition-colors duration-300">
         <h2 class="text-xl font-bold mb-4 w-full text-left">Preview</h2>
         <div id="previewContainer" class="flex flex-col gap-4 justify-center items-center w-full overflow-x-auto">
-            <canvas id="canvas1" class="canvas-container bg-white" width="1080" height="1350"></canvas>
-            <canvas id="canvas2" class="canvas-container bg-white hidden" width="1080" height="1350"></canvas>
+            <!-- 確保 Canvas 元素完美存在，以供預覽使用 -->
+            <canvas id="canvas1" class="canvas-container" width="1080" height="1350"></canvas>
+            <canvas id="canvas2" class="canvas-container hidden" width="1080" height="1350"></canvas>
         </div>
     </div>
 </div>
@@ -276,7 +295,7 @@ const drawText = (ctx, text, x, y, size, color, align = "center", baseline = "mi
 };
 
 // ==========================================
-// 修改背景：加入毛玻璃 (Glassmorphism) 效果
+// 背景：毛玻璃 (Glassmorphism) 效果
 // ==========================================
 const drawBackground = (ctx, C) => {
     // 底色
@@ -329,7 +348,7 @@ const drawFooter = (ctx, C) => {
     }
 };
 
-// Render Functions
+// Render Functions (觸發即可在 Canvas 上即時預覽)
 const generateImageSingle = () => {
     const c = document.getElementById('canvas1');
     const ctx = c.getContext('2d');
@@ -381,7 +400,6 @@ const generateImageSingle = () => {
         if(dep > 0) drawText(ctx, `Dep: +${formatNum(dep)}`, x + 40, gridY + 230, 25, C.text_sub, "left", "middle");
         const g = calcGrowth(pVal, val);
         const gPos = g.diff >= 0;
-        // 將這裡的字體大小從原本的 45 修改為 35
         drawText(ctx, `${gPos ? '▲' : '▼'} ${g.str} (${g.pct})`, x + 40, gridY + 290, 35, gPos ? C.up : C.down, "left", "middle");
     };
 
@@ -405,19 +423,7 @@ const generateImageSingle = () => {
     drawText(ctx, `YTD ADDED (Jan-Now): $${formatNum(state.ytd_deposit)} TWD`, alignX, lineY + 120, 30, C.text_sub, "left", "middle");
     drawText(ctx, `LEVERAGE RATIO: ${state.leverage_ratio}x`, alignX, lineY + 160, 30, C.text_sub, "left", "middle");
 
-    // 只有在輸入有效 IG ID (且非 Default_ID) 的情況下，才繪製大頭貼與簽名
-    if (state.username && state.username.trim() !== "" && state.username !== "Default_ID") {
-        const signText = `@${state.username}`;
-        ctx.font = `35px Roboto, sans-serif`;
-        const signW = ctx.measureText(signText).width;
-        const iconS = 50, gapS = 15;
-        const startXSign = CX - (iconS + gapS + signW) / 2;
-        const startYSign = lineY + 200;
-        
-        if (igIconImg) { ctx.drawImage(igIconImg, startXSign, startYSign, iconS, iconS); }
-        else { ctx.beginPath(); ctx.arc(startXSign + iconS/2, startYSign + iconS/2, iconS/2, 0, Math.PI*2); ctx.strokeStyle = C.text_main; ctx.lineWidth = 2; ctx.stroke(); }
-        drawText(ctx, signText, startXSign + iconS + gapS, startYSign + iconS/2, 35, C.text_main, "left", "middle");
-    }
+    drawFooter(ctx, C);
 };
 
 const generateImageP1 = () => {
@@ -467,7 +473,6 @@ const generateImageP1 = () => {
         if(dep > 0) drawText(ctx, `Dep: +${formatNum(dep)}`, x + 40, gridY + 230, 25, C.text_sub, "left", "middle");
         const g = calcGrowth(pVal, val);
         const gPos = g.diff >= 0;
-        // 將這裡的字體大小從原本的 45 修改為 35
         drawText(ctx, `${gPos ? '▲' : '▼'} ${g.str} (${g.pct})`, x + 40, gridY + 290, 35, gPos ? C.up : C.down, "left", "middle");
     };
 
@@ -493,29 +498,82 @@ const generateImageP2 = () => {
     drawRoundRect(ctx, CX - tagW/2 - 45, 187, tagW + 90, 70, 35, "#F3F4F6", null, 0);
     drawText(ctx, tag, CX, 222, 25, "#6B7280", "center", "middle");
 
-    const cardW = 880, cardH = 170, cardX = (CANVAS_SIZE.w - cardW)/2;
-    const gap = 30, yFx = 320, yMo = yFx + cardH + gap, yYtd = yMo + cardH + gap, yLev = yYtd + cardH + gap;
+    // 將卡片排版調整為 2x2 格狀，為下方的圓餅圖留出空間
+    const cardW = 425, cardH = 150, startX = 100, gap = 30;
+    const rightX = startX + cardW + gap;
+    const yRow1 = 320, yRow2 = 500;
 
-    const drawRowCard = (y, lbl, valMain, valChange, isPosChange) => {
-        drawRoundRect(ctx, cardX, y, cardW, cardH, 40, C.card_bg, C.border, 5);
-        drawText(ctx, lbl, CX, y + 50, 35, C.text_sub, "center", "middle");
+    const drawGridCard = (x, y, lbl, valMain, valChange, isPosChange) => {
+        drawRoundRect(ctx, x, y, cardW, cardH, 30, C.card_bg, C.border, 4);
+        drawText(ctx, lbl, x + cardW/2, y + 45, 28, C.text_sub, "center", "middle");
         if(valChange) {
-            ctx.font = `40px Roboto, sans-serif`;
+            ctx.font = `32px Roboto, sans-serif`;
             const w1 = ctx.measureText(valMain).width;
             const w2 = ctx.measureText(valChange).width;
-            const sx = CX - (w1+w2)/2;
-            drawText(ctx, valMain, sx, y + 115, 40, C.text_main, "left", "middle");
-            drawText(ctx, valChange, sx + w1, y + 115, 40, isPosChange ? C.up : C.down, "left", "middle");
+            const sx = x + cardW/2 - (w1+w2)/2;
+            drawText(ctx, valMain, sx, y + 100, 32, C.text_main, "left", "middle");
+            drawText(ctx, valChange, sx + w1, y + 100, 32, isPosChange ? C.up : C.down, "left", "middle");
         } else {
-            drawText(ctx, valMain, CX, y + 115, 55, C.text_main, "center", "middle");
+            drawText(ctx, valMain, x + cardW/2, y + 100, 42, C.text_main, "center", "middle");
         }
     };
 
     const rateDiff = state.exchange_rate - state.prev_exchange_rate;
-    drawRowCard(yFx, "EXCHANGE RATE", `1 USD = ${state.exchange_rate} TWD`, ` (${rateDiff>=0?'▲':'▼'} ${Math.abs(rateDiff).toFixed(3)})`, rateDiff>=0);
-    drawRowCard(yMo, "THIS MONTH ADDED", `$${formatNum(state.monthly_added_twd)} TWD`);
-    drawRowCard(yYtd, "YTD ADDED (Jan-Now)", `$${formatNum(state.ytd_deposit)} TWD`);
-    drawRowCard(yLev, "LEVERAGE RATIO", `${state.leverage_ratio}x`);
+    drawGridCard(startX, yRow1, "EXCHANGE RATE", `1 USD = ${state.exchange_rate}`, ` (${rateDiff>=0?'▲':'▼'} ${Math.abs(rateDiff).toFixed(3)})`, rateDiff>=0);
+    drawGridCard(rightX, yRow1, "LEVERAGE RATIO", `${state.leverage_ratio}x`);
+    drawGridCard(startX, yRow2, "THIS MONTH ADDED", `$${formatNum(state.monthly_added_twd)} TWD`);
+    drawGridCard(rightX, yRow2, "YTD ADDED", `$${formatNum(state.ytd_deposit)} TWD`);
+
+    // 加入投資組合圓餅圖 (Donut Chart) 卡片
+    const yPie = 680, pieH = 380, pieW = 880;
+    drawRoundRect(ctx, startX, yPie, pieW, pieH, 40, C.card_bg, C.border, 5);
+    drawText(ctx, "PORTFOLIO ALLOCATION", CX, yPie + 50, 32, C.text_sub, "center", "middle");
+
+    const usVal = state.us_stock * state.exchange_rate;
+    const twVal = state.tw_stock;
+    const totVal = usVal + twVal;
+    const usPct = totVal === 0 ? 0 : usVal / totVal;
+    const twPct = totVal === 0 ? 0 : twVal / totVal;
+
+    // 繪製圓餅圖
+    const px = startX + 250, py = yPie + 220, r = 110;
+    const startAngle = -Math.PI / 2;
+    const usEnd = startAngle + usPct * Math.PI * 2;
+
+    // 美股區塊
+    ctx.beginPath();
+    ctx.moveTo(px, py);
+    ctx.arc(px, py, r, startAngle, usEnd);
+    ctx.fillStyle = "#3b82f6";
+    ctx.fill();
+
+    // 台股區塊 - 修改為綠色
+    ctx.beginPath();
+    ctx.moveTo(px, py);
+    ctx.arc(px, py, r, usEnd, usEnd + twPct * Math.PI * 2);
+    ctx.fillStyle = "#10b981"; // 綠色
+    ctx.fill();
+
+    // 挖空中心成為甜甜圈形狀
+    ctx.beginPath();
+    ctx.arc(px, py, 65, 0, Math.PI * 2);
+    ctx.fillStyle = C.card_bg;
+    ctx.fill();
+
+    // 繪製圖例 (Legend)
+    const lx = startX + 480;
+    const ly1 = yPie + 170;
+    const ly2 = yPie + 250;
+
+    // 美股圖例
+    drawRoundRect(ctx, lx, ly1 - 20, 20, 20, 4, "#3b82f6");
+    drawText(ctx, "US STOCK", lx + 40, ly1 - 10, 26, C.text_sub, "left", "middle");
+    drawText(ctx, `${(usPct * 100).toFixed(1)}%`, lx + 40, ly1 + 25, 36, C.text_main, "left", "middle");
+
+    // 台股圖例 - 修改為綠色
+    drawRoundRect(ctx, lx, ly2 - 20, 20, 20, 4, "#10b981"); // 綠色
+    drawText(ctx, "TW STOCK", lx + 40, ly2 - 10, 26, C.text_sub, "left", "middle");
+    drawText(ctx, `${(twPct * 100).toFixed(1)}%`, lx + 40, ly2 + 25, 36, C.text_main, "left", "middle");
 
     drawFooter(ctx, C);
 };
@@ -548,6 +606,17 @@ const initApp = async () => {
         els.layout.value = cachedLayout;
     }
 
+    // 讀取獨立快取的 Theme 設定
+    const cachedTheme = localStorage.getItem('assetReportTheme');
+    if (cachedTheme) {
+        state.theme = cachedTheme;
+        els.theme.value = cachedTheme;
+    }
+
+    // 初始化 UI 主題
+    if (state.theme === 'dark') document.documentElement.classList.add('dark');
+    else document.documentElement.classList.remove('dark');
+
     updateSelectors();
 
     // 2. 如果有紀錄，自動載入最新的一筆到畫面上
@@ -570,19 +639,28 @@ const initApp = async () => {
     // Load Icon
     const img = new Image();
     img.crossOrigin = "Anonymous";
-    img.onload = () => { igIconImg = img; renderCanvas(); };
+    img.onload = () => { igIconImg = img; renderCanvas(); }; // 載入完成後會觸發預覽渲染
     img.src = IG_ICON_URL;
 
     // Font load wait (heuristic)
     await document.fonts.ready;
     
     attachListeners();
-    renderCanvas();
+    renderCanvas(); // 第一時間在 Canvas 上繪製預覽
 };
 
 const attachListeners = () => {
+    // 監聽所有輸入框變更，只要有改動就立即重新繪製 Canvas (提供即時預覽功能)
     const inputs = [els.year, els.month, els.us, els.tw, els.usDep, els.twDep, els.moAdded, els.lev, els.rate, els.pTot, els.pUs, els.pTw, els.pRate, els.usr, els.theme, els.layout];
     inputs.forEach(el => el.addEventListener('change', () => {
+        if (isLoading) return;
+        updateStateFromUI();
+        renderCanvas();
+    }));
+
+    // 鍵盤輸入即時預覽支援 (增加 input 事件)
+    const textInputs = [els.us, els.tw, els.usDep, els.twDep, els.moAdded, els.lev, els.rate, els.pTot, els.pUs, els.pTw, els.pRate, els.usr];
+    textInputs.forEach(el => el.addEventListener('input', () => {
         if (isLoading) return;
         updateStateFromUI();
         renderCanvas();
@@ -599,8 +677,8 @@ const attachListeners = () => {
             els.rate.value = data.rates.TWD;
             updateStateFromUI();
             renderCanvas();
-            showMsg(`✅ Rate updated: ${data.rates.TWD}`);
-        } catch(e) { showMsg(`❌ Failed: ${e.message}`); }
+            showMsg(`Rate updated: ${data.rates.TWD}`);
+        } catch(e) { showMsg(`Failed: ${e.message}`); }
     });
 
     els.recSel.addEventListener('change', (e) => {
@@ -653,7 +731,7 @@ const attachListeners = () => {
         // 3. 每次儲存時，更新快取資料
         localStorage.setItem('assetReportHistory', JSON.stringify(historyRecords));
 
-        showMsg(`💾 Saved: ${monthId}`);
+        showMsg(`Saved: ${monthId}`);
     });
 
     document.getElementById('btnExport').addEventListener('click', () => {
@@ -663,7 +741,7 @@ const attachListeners = () => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a'); a.href = url; a.download = 'assets_backup.json';
         a.click();
-        showMsg(`📥 Exported ${historyRecords.length} records`);
+        showMsg(`Exported ${historyRecords.length} records`);
     });
 
     document.getElementById('btnImport').addEventListener('click', () => els.fileIn.click());
@@ -685,9 +763,9 @@ const attachListeners = () => {
                     // 4. 每次成功匯入時，將資料寫入快取
                     localStorage.setItem('assetReportHistory', JSON.stringify(historyRecords));
 
-                    showMsg(`✅ Imported ${historyRecords.length} records`);
+                    showMsg(`Imported ${historyRecords.length} records`);
                 }
-            } catch(err) { showMsg(`❌ Import Error`); }
+            } catch(err) { showMsg(`Import Error`); }
         };
         reader.readAsText(file);
     });
@@ -740,9 +818,9 @@ const attachListeners = () => {
                     await navigator.share({
                         files: filesToShare,
                         title: 'Asset Report',
-                        text: 'IG Asset Report'
+                        text: 'ASSET REPORT GENERATOR'
                     });
-                    showMsg('✅ 請在選單中點選「儲存影像」');
+                    showMsg('請在選單中點選「儲存影像」');
                     return; // 成功呼叫原生選單後就結束，不執行下方電腦版下載
                 }
             } catch (err) {
@@ -787,7 +865,13 @@ const updateStateFromUI = () => {
     state.username = els.usr.value;
     localStorage.setItem('assetReportUsername', state.username);
     
-    state.theme = els.theme.value;
+    // 如果 Theme 變更，套用 UI 切換與儲存
+    if (state.theme !== els.theme.value) {
+        state.theme = els.theme.value;
+        localStorage.setItem('assetReportTheme', state.theme);
+        if (state.theme === 'dark') document.documentElement.classList.add('dark');
+        else document.documentElement.classList.remove('dark');
+    }
     
     // 儲存 Layout 設定到快取中
     state.layout = els.layout.value;
@@ -878,7 +962,7 @@ const updateSelectors = () => {
     ids.forEach(id => els.compSel.add(new Option(id, id)));
 };
 
-// Start
+// Start App
 initApp();
 </script>
 </body>
