@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASSET REPORT GENERATOR</title>
+    <title>ASSET REPORT</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -23,7 +23,7 @@
         const iconSvg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='110' fill='%233b82f6'/%3E%3Crect x='110' y='320' width='60' height='90' rx='15' fill='%23ffffff' opacity='0.6'/%3E%3Crect x='226' y='230' width='60' height='180' rx='15' fill='%23ffffff' opacity='0.8'/%3E%3Crect x='342' y='120' width='60' height='290' rx='15' fill='%23ffffff'/%3E%3Cpath d='M 140 330 L 256 240 L 372 130' stroke='%23fcd34d' stroke-width='30' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3Ccircle cx='372' cy='130' r='25' fill='%23fcd34d'/%3E%3C/svg%3E";
 
         const manifest = {
-            name: "Asset Report Generator",
+            name: "Asset Report",
             short_name: "AssetReport",
             start_url: ".",
             display: "standalone",
@@ -71,9 +71,21 @@
                     <path d="M 140 330 L 256 240 L 372 130" stroke="#fcd34d" stroke-width="30" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
                     <circle cx="372" cy="130" r="25" fill="#fcd34d"/>
                 </svg>
-                ASSET REPORT GENERATOR
+                ASSET REPORT
             </h2>
             <div class="text-sm text-gray-500 dark:text-gray-400 mt-1 ml-11 font-medium tracking-wide">v0.0.0.1</div>
+        </div>
+
+        <!-- UI Asset Trend Chart -->
+        <div class="mb-6 p-5 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition-colors duration-300">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-gray-800 dark:text-gray-100">Asset Trend</h3>
+                <div class="flex gap-4 text-xs font-semibold">
+                    <div class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-emerald-500"></span><span class="text-gray-600 dark:text-gray-400">TW Stock</span></div>
+                    <div class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-blue-500"></span><span class="text-gray-600 dark:text-gray-400">US Stock</span></div>
+                </div>
+            </div>
+            <canvas id="uiChartCanvas" width="800" height="320" class="w-full h-auto"></canvas>
         </div>
 
         <div class="space-y-6">
@@ -260,7 +272,6 @@ const calcGrowth = (prev, curr) => {
 };
 const showMsg = (msg) => { document.getElementById('statusMsg').innerText = msg; setTimeout(() => document.getElementById('statusMsg').innerText = '', 3000); };
 
-// DOM Elements bindings
 const els = {
     year: document.getElementById('inYear'), month: document.getElementById('inMonth'),
     us: document.getElementById('inUs'), tw: document.getElementById('inTw'),
@@ -300,11 +311,9 @@ const drawText = (ctx, text, x, y, size, color, align = "center", baseline = "mi
 // 背景：毛玻璃 (Glassmorphism) 效果
 // ==========================================
 const drawBackground = (ctx, C) => {
-    // 底色
     ctx.fillStyle = C.bg;
     ctx.fillRect(0, 0, CANVAS_SIZE.w, CANVAS_SIZE.h);
     
-    // 使用 RadialGradient 模擬毛玻璃模糊，解決 iOS Safari 不支援 ctx.filter 的問題
     const gradBlue = ctx.createRadialGradient(CANVAS_SIZE.w - 150, 150, 0, CANVAS_SIZE.w - 150, 150, 500);
     gradBlue.addColorStop(0, "rgba(59, 130, 246, 0.5)");
     gradBlue.addColorStop(0.5, "rgba(59, 130, 246, 0.2)");
@@ -319,19 +328,16 @@ const drawBackground = (ctx, C) => {
     ctx.fillStyle = gradOrange;
     ctx.fillRect(0, 0, CANVAS_SIZE.w, CANVAS_SIZE.h);
 
-    // 加上半透明的覆蓋層，創造毛玻璃的質感
     const overlayColor = state.actual_theme === 'light' ? "rgba(255, 255, 255, 0.6)" : "rgba(15, 23, 42, 0.6)";
     ctx.fillStyle = overlayColor;
     ctx.fillRect(0, 0, CANVAS_SIZE.w, CANVAS_SIZE.h);
 };
 
-// 修改：增加 signatureYOffset 讓不同排版可以自訂 IG ID 的垂直位置
 const drawFooter = (ctx, C, signatureYOffset = 100) => {
     const lineY = 1090;
     ctx.beginPath(); ctx.moveTo(80, lineY); ctx.lineTo(CANVAS_SIZE.w - 80, lineY);
     ctx.strokeStyle = C.border; ctx.lineWidth = 3; ctx.stroke();
 
-    // 只有在輸入有效 IG ID (且非 Default_ID) 的情況下，才繪製大頭貼與簽名
     if (state.username && state.username.trim() !== "" && state.username !== "Default_ID") {
         const signText = `@${state.username}`;
         ctx.font = `35px Roboto, sans-serif`;
@@ -351,18 +357,128 @@ const drawFooter = (ctx, C, signatureYOffset = 100) => {
     }
 };
 
-// Render Functions (觸發即可在 Canvas 上即時預覽)
+// ==========================================
+// 趨勢組合圖（直條疊加＋折線頂部）共用繪製函數
+// ==========================================
+const getChartData = () => {
+    let chartDataMap = new Map();
+    historyRecords.forEach(r => {
+        chartDataMap.set(r.monthId, {
+            tw: parseInt(r.tw) || 0,
+            us: (parseFloat(r.us) || 0) * (parseFloat(r.rate) || 32)
+        });
+    });
+
+    // 確保即時反映 UI 當下編輯的數據
+    const mIdx = MONTHS.indexOf(state.month) + 1;
+    const currentId = `${state.year}-${mIdx.toString().padStart(2, '0')}`;
+    chartDataMap.set(currentId, {
+        tw: state.tw_stock,
+        us: state.us_stock * state.exchange_rate
+    });
+
+    let sortedIds = Array.from(chartDataMap.keys()).sort();
+    return sortedIds.map(id => ({ id, ...chartDataMap.get(id) }));
+};
+
+const drawComboChart = (ctx, cX, cY, cW, cH, chartData, C, isUI = false) => {
+    const maxVal = Math.max(...chartData.map(d => d.tw + d.us)) * 1.1 || 1;
+
+    // 繪製背景格線
+    ctx.strokeStyle = C.border;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(cX, cY); ctx.lineTo(cX, cY + cH); ctx.lineTo(cX + cW, cY + cH);
+    ctx.stroke();
+
+    if (chartData.length === 0) return;
+
+    const xStep = chartData.length > 1 ? cW / (chartData.length - 1) : cW;
+    const pts = chartData.map((d, i) => ({
+        x: cX + i * xStep,
+        yTw: cY + cH - (d.tw / maxVal) * cH,
+        yTot: cY + cH - ((d.tw + d.us) / maxVal) * cH,
+        label: d.id
+    }));
+
+    const barW = Math.min(xStep * 0.4, isUI ? 25 : 40);
+
+    // 1. 繪製疊加直條圖 (Stacked Bars)
+    pts.forEach((p) => {
+        // 台股直條圖 (Green)
+        const twH = (cY + cH) - p.yTw;
+        ctx.fillStyle = "rgba(16, 185, 129, 0.4)";
+        ctx.fillRect(p.x - barW/2, p.yTw, barW, twH);
+
+        // 美股直條圖 (Blue) 疊加在台股上方
+        const usH = p.yTw - p.yTot;
+        ctx.fillStyle = "rgba(59, 130, 246, 0.4)";
+        ctx.fillRect(p.x - barW/2, p.yTot, barW, usH);
+    });
+
+    // 2. 繪製折線圖 (Lines connecting the peaks)
+    // 台股頂點連線
+    ctx.beginPath();
+    pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.yTw) : ctx.lineTo(p.x, p.yTw));
+    ctx.strokeStyle = "#10b981"; ctx.lineWidth = isUI ? 2 : 3; ctx.stroke();
+
+    // 總資產頂點連線 (即為美股直條圖的最高點)
+    ctx.beginPath();
+    pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.yTot) : ctx.lineTo(p.x, p.yTot));
+    ctx.strokeStyle = "#3b82f6"; ctx.lineWidth = isUI ? 2 : 3; ctx.stroke();
+
+    // 3. 繪製節點與標籤
+    const stepLabel = Math.max(1, Math.ceil(pts.length / (isUI ? 6 : 8)));
+    pts.forEach((p, i) => {
+        ctx.beginPath(); ctx.arc(p.x, p.yTot, isUI ? 3.5 : 5, 0, Math.PI*2);
+        ctx.fillStyle = C.card_bg; ctx.fill();
+        ctx.strokeStyle = "#3b82f6"; ctx.lineWidth = isUI ? 2 : 2.5; ctx.stroke();
+
+        // X軸標籤
+        if (i % stepLabel === 0 || i === pts.length - 1) {
+            const [y, m] = p.label.split('-');
+            drawText(ctx, `${m}/${y.slice(2)}`, p.x, cY + cH + (isUI ? 20 : 25), isUI ? 12 : 20, C.text_sub, "center", "middle");
+        }
+    });
+
+    // 4. 繪製 Y 軸標籤與輔助橫線 (格式化為"M"單位)
+    ctx.textAlign = "right";
+    for(let i=0; i<=3; i++) {
+        const v = maxVal * (i/3);
+        const y = cY + cH - (i/3)*cH;
+        drawText(ctx, `${(v/1000000).toFixed(1)}M`, cX - (isUI ? 10 : 15), y, isUI ? 12 : 20, C.text_sub, "right", "middle");
+        if(i > 0) { 
+            ctx.beginPath(); ctx.moveTo(cX, y); ctx.lineTo(cX+cW, y);
+            ctx.strokeStyle = C.border; ctx.lineWidth = 1;
+            ctx.setLineDash([4, 4]); ctx.stroke(); ctx.setLineDash([]);
+        }
+    }
+};
+
+// Render Functions
+const renderUIChart = () => {
+    const c = document.getElementById('uiChartCanvas');
+    const ctx = c.getContext('2d');
+    const C = COLORS[state.actual_theme];
+    
+    // 清空 Canvas 以便重新繪圖
+    ctx.clearRect(0, 0, c.width, c.height);
+
+    const chartData = getChartData();
+    // 給予 UI Canvas 適合的邊距
+    drawComboChart(ctx, 60, 20, c.width - 90, c.height - 60, chartData, C, true);
+};
+
 const generateImageSingle = () => {
     const c = document.getElementById('canvas1');
     const ctx = c.getContext('2d');
     const C = COLORS[state.actual_theme];
     drawBackground(ctx, C);
 
-    const title = `${state.month.substring(0,3)} ${state.year} Asset Report`;
+    const title = `${state.month.substring(0,3)} ${state.year} ASSET REPORT`;
     const currentTotal = Math.floor(state.us_stock * state.exchange_rate + state.tw_stock);
     const CX = CANVAS_SIZE.w / 2;
 
-    // Header
     drawText(ctx, title, CX, 100, 60, C.text_main, "center", "top");
     const tag = "MONTHLY REPORT";
     ctx.font = `25px Roboto, sans-serif`;
@@ -370,7 +486,6 @@ const generateImageSingle = () => {
     drawRoundRect(ctx, CX - tagW/2 - 45, 187, tagW + 90, 70, 35, "#F3F4F6", null, 0);
     drawText(ctx, tag, CX, 222, 25, "#6B7280", "center", "middle");
 
-    // Total
     drawText(ctx, "TOTAL ASSETS", CX, 340, 45, C.text_sub, "center", "top");
     const totStr = formatNum(currentTotal);
     ctx.font = `85px Roboto, sans-serif`;
@@ -383,7 +498,6 @@ const generateImageSingle = () => {
     drawText(ctx, dolStr, startX, 470, 85, C.text_main, "left", "alphabetic");
     drawText(ctx, totStr, startX + dolW + gap, 470, 85, C.text_main, "left", "alphabetic");
 
-    // Growth Pill
     const { diff, str, pct } = calcGrowth(state.prev_total, currentTotal);
     const isPos = diff >= 0;
     const trendStr = `${isPos ? '▲' : '▼'} ${str} (${pct})`;
@@ -392,7 +506,6 @@ const generateImageSingle = () => {
     drawRoundRect(ctx, CX - trendW/2 - 60, 530, trendW + 120, 90, 45, isPos ? C.up_bg : C.down_bg, null, 0);
     drawText(ctx, trendStr, CX, 575, 45, isPos ? C.up : C.down, "center", "middle");
 
-    // Grid (US / TW)
     const cardW = 440, cardH = 360, gridY = 660, gGap = 40;
     const leftX = CX - cardW - gGap/2, rightX = CX + gGap/2;
 
@@ -409,8 +522,6 @@ const generateImageSingle = () => {
     drawCard(leftX, "US STOCK", state.us_stock, state.us_deposit, state.prev_us);
     drawCard(rightX, "TW STOCK", state.tw_stock, state.tw_deposit, state.prev_tw);
 
-    // Footer Ext (Single Page 專屬文字資訊)
-    // 交由 drawFooter 繪製上方分隔線，並將 IG ID 下移到 200 的位置避免與下方文字重疊
     drawFooter(ctx, C, 200);
 
     const lineY = 1090;
@@ -433,7 +544,7 @@ const generateImageP1 = () => {
     const C = COLORS[state.actual_theme];
     drawBackground(ctx, C);
 
-    const title = `${state.month.substring(0,3)} ${state.year} Asset Report`;
+    const title = `${state.month.substring(0,3)} ${state.year} ASSET REPORT`;
     const currentTotal = Math.floor(state.us_stock * state.exchange_rate + state.tw_stock);
     const CX = CANVAS_SIZE.w / 2;
 
@@ -480,7 +591,6 @@ const generateImageP1 = () => {
     drawCard(leftX, "US STOCK", state.us_stock, state.us_deposit, state.prev_us);
     drawCard(rightX, "TW STOCK", state.tw_stock, state.tw_deposit, state.prev_tw);
 
-    // Multi Page 模式預設 IG ID 在 100 的位置
     drawFooter(ctx, C, 100);
 };
 
@@ -500,7 +610,6 @@ const generateImageP2 = () => {
     drawRoundRect(ctx, CX - tagW/2 - 45, 187, tagW + 90, 70, 35, "#F3F4F6", null, 0);
     drawText(ctx, tag, CX, 222, 25, "#6B7280", "center", "middle");
 
-    // 將卡片排版調整為 2x2 格狀，為下方的圓餅圖留出空間
     const cardW = 425, cardH = 150, startX = 100, gap = 30;
     const rightX = startX + cardW + gap;
     const yRow1 = 320, yRow2 = 500;
@@ -526,58 +635,22 @@ const generateImageP2 = () => {
     drawGridCard(startX, yRow2, "THIS MONTH ADDED", `$${formatNum(state.monthly_added_twd)} TWD`);
     drawGridCard(rightX, yRow2, "YTD ADDED", `$${formatNum(state.ytd_deposit)} TWD`);
 
-    // 加入投資組合圓餅圖 (Donut Chart) 卡片
-    const yPie = 680, pieH = 380, pieW = 880;
-    drawRoundRect(ctx, startX, yPie, pieW, pieH, 40, C.card_bg, C.border, 5);
-    drawText(ctx, "PORTFOLIO ALLOCATION", CX, yPie + 50, 32, C.text_sub, "center", "middle");
-
-    const usVal = state.us_stock * state.exchange_rate;
-    const twVal = state.tw_stock;
-    const totVal = usVal + twVal;
-    const usPct = totVal === 0 ? 0 : usVal / totVal;
-    const twPct = totVal === 0 ? 0 : twVal / totVal;
-
-    // 繪製圓餅圖
-    const px = startX + 250, py = yPie + 220, r = 110;
-    const startAngle = -Math.PI / 2;
-    const usEnd = startAngle + usPct * Math.PI * 2;
-
-    // 美股區塊
-    ctx.beginPath();
-    ctx.moveTo(px, py);
-    ctx.arc(px, py, r, startAngle, usEnd);
-    ctx.fillStyle = "#3b82f6";
-    ctx.fill();
-
-    // 台股區塊 - 綠色
-    ctx.beginPath();
-    ctx.moveTo(px, py);
-    ctx.arc(px, py, r, usEnd, usEnd + twPct * Math.PI * 2);
-    ctx.fillStyle = "#10b981"; // 綠色
-    ctx.fill();
-
-    // 挖空中心成為甜甜圈形狀
-    ctx.beginPath();
-    ctx.arc(px, py, 65, 0, Math.PI * 2);
-    ctx.fillStyle = C.card_bg;
-    ctx.fill();
+    // 加入趨勢組合圖 (Stacked Bar + Line) 卡片
+    const yTrend = 680, trendH = 380, trendW = 880;
+    drawRoundRect(ctx, startX, yTrend, trendW, trendH, 40, C.card_bg, C.border, 5);
+    drawText(ctx, "ASSET TREND", startX + 50, yTrend + 50, 32, C.text_sub, "left", "middle");
 
     // 繪製圖例 (Legend)
-    const lx = startX + 480;
-    const ly1 = yPie + 170;
-    const ly2 = yPie + 250;
+    const lx1 = startX + trendW - 200, lx2 = startX + trendW - 100, ly = yTrend + 50;
+    drawRoundRect(ctx, lx1, ly - 10, 15, 15, 3, "#10b981");
+    drawText(ctx, "TW", lx1 + 25, ly - 2, 22, C.text_sub, "left", "middle");
+    drawRoundRect(ctx, lx2, ly - 10, 15, 15, 3, "#3b82f6");
+    drawText(ctx, "US", lx2 + 25, ly - 2, 22, C.text_sub, "left", "middle");
 
-    // 美股圖例
-    drawRoundRect(ctx, lx, ly1 - 20, 20, 20, 4, "#3b82f6");
-    drawText(ctx, "US STOCK", lx + 40, ly1 - 10, 26, C.text_sub, "left", "middle");
-    drawText(ctx, `${(usPct * 100).toFixed(1)}%`, lx + 40, ly1 + 25, 36, C.text_main, "left", "middle");
+    const chartData = getChartData();
+    const cX = startX + 100, cY = yTrend + 100, cW = trendW - 140, cH = trendH - 160;
+    drawComboChart(ctx, cX, cY, cW, cH, chartData, C, false);
 
-    // 台股圖例 - 綠色
-    drawRoundRect(ctx, lx, ly2 - 20, 20, 20, 4, "#10b981"); // 綠色
-    drawText(ctx, "TW STOCK", lx + 40, ly2 - 10, 26, C.text_sub, "left", "middle");
-    drawText(ctx, `${(twPct * 100).toFixed(1)}%`, lx + 40, ly2 + 25, 36, C.text_main, "left", "middle");
-
-    // Multi Page 模式預設 IG ID 在 100 的位置
     drawFooter(ctx, C, 100);
 };
 
@@ -594,7 +667,7 @@ const applyTheme = (themeSetting) => {
         actualTheme = themeSetting;
     }
 
-    state.actual_theme = actualTheme; // 紀錄實際用來繪圖的主題
+    state.actual_theme = actualTheme; 
 
     if (actualTheme === 'dark') {
         document.documentElement.classList.add('dark');
@@ -603,7 +676,6 @@ const applyTheme = (themeSetting) => {
     }
 };
 
-// 監聽系統主題變化 (當設定為 system 時即時反應)
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
     if (state.theme === 'system') {
         applyTheme('system');
@@ -617,7 +689,6 @@ const initApp = async () => {
     for(let y=2024; y<=2030; y++) { els.year.add(new Option(y, y)); }
     MONTHS.forEach(m => els.month.add(new Option(m, m)));
 
-    // 1. 從快取中讀取歷史紀錄
     const cachedHistory = localStorage.getItem('assetReportHistory');
     if (cachedHistory) {
         try {
@@ -625,21 +696,18 @@ const initApp = async () => {
         } catch(e) { console.warn("Failed to parse cached history."); }
     }
     
-    // 讀取獨立快取的 IG ID
     const cachedUsername = localStorage.getItem('assetReportUsername');
     if (cachedUsername) {
         state.username = cachedUsername;
         els.usr.value = cachedUsername; 
     }
 
-    // 讀取獨立快取的 Layout 設定
     const cachedLayout = localStorage.getItem('assetReportLayout');
     if (cachedLayout) {
         state.layout = cachedLayout;
         els.layout.value = cachedLayout;
     }
 
-    // 讀取獨立快取的 Theme 設定並套用
     const cachedTheme = localStorage.getItem('assetReportTheme');
     if (cachedTheme) {
         state.theme = cachedTheme;
@@ -649,7 +717,6 @@ const initApp = async () => {
 
     updateSelectors();
 
-    // 2. 如果有紀錄，自動載入最新的一筆到畫面上
     if (historyRecords.length > 0) {
         const latest = historyRecords[0];
         loadRecordToUI(latest);
@@ -666,21 +733,18 @@ const initApp = async () => {
         updateUIFromState();
     }
     
-    // Load Icon
     const img = new Image();
     img.crossOrigin = "Anonymous";
-    img.onload = () => { igIconImg = img; renderCanvas(); }; // 載入完成後會觸發預覽渲染
+    img.onload = () => { igIconImg = img; renderCanvas(); }; 
     img.src = IG_ICON_URL;
 
-    // Font load wait (heuristic)
     await document.fonts.ready;
     
     attachListeners();
-    renderCanvas(); // 第一時間在 Canvas 上繪製預覽
+    renderCanvas();
 };
 
 const attachListeners = () => {
-    // 監聽所有輸入框變更，只要有改動就立即重新繪製 Canvas (提供即時預覽功能)
     const inputs = [els.year, els.month, els.us, els.tw, els.usDep, els.twDep, els.moAdded, els.lev, els.rate, els.pTot, els.pUs, els.pTw, els.pRate, els.usr, els.theme, els.layout];
     inputs.forEach(el => el.addEventListener('change', () => {
         if (isLoading) return;
@@ -688,7 +752,6 @@ const attachListeners = () => {
         renderCanvas();
     }));
 
-    // 鍵盤輸入即時預覽支援 (增加 input 事件)
     const textInputs = [els.us, els.tw, els.usDep, els.twDep, els.moAdded, els.lev, els.rate, els.pTot, els.pUs, els.pTw, els.pRate, els.usr];
     textInputs.forEach(el => el.addEventListener('input', () => {
         if (isLoading) return;
@@ -758,10 +821,10 @@ const attachListeners = () => {
         updateSelectors();
         els.recSel.value = monthId;
 
-        // 3. 每次儲存時，更新快取資料
         localStorage.setItem('assetReportHistory', JSON.stringify(historyRecords));
 
         showMsg(`Saved: ${monthId}`);
+        renderCanvas();
     });
 
     document.getElementById('btnExport').addEventListener('click', () => {
@@ -790,10 +853,10 @@ const attachListeners = () => {
                         els.recSel.dispatchEvent(new Event('change'));
                     }
 
-                    // 4. 每次成功匯入時，將資料寫入快取
                     localStorage.setItem('assetReportHistory', JSON.stringify(historyRecords));
 
                     showMsg(`Imported ${historyRecords.length} records`);
+                    renderCanvas(); 
                 }
             } catch(err) { showMsg(`Import Error`); }
         };
@@ -810,7 +873,6 @@ const attachListeners = () => {
             const a = document.createElement('a'); a.href = url; a.download = name; a.click();
         };
 
-        // 轉換 Canvas 為 File 物件 (為了供手機端分享使用)
         const getCanvasFile = (canvasId, name) => {
             return new Promise(resolve => {
                 document.getElementById(canvasId).toBlob(blob => {
@@ -819,10 +881,8 @@ const attachListeners = () => {
             });
         };
 
-        // 偵測是否為行動裝置
         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-        // 如果是行動裝置且支援 Web Share API
         if (isMobile && navigator.canShare) {
             try {
                 let filesToShare = [];
@@ -851,15 +911,14 @@ const attachListeners = () => {
                         text: 'ASSET REPORT GENERATOR'
                     });
                     showMsg('請在選單中點選「儲存影像」');
-                    return; // 成功呼叫原生選單後就結束，不執行下方電腦版下載
+                    return; 
                 }
             } catch (err) {
                 console.log('Share canceled or failed', err);
-                return; // 假如使用者取消分享，也不要跳出下載
+                return; 
             }
         }
 
-        // 電腦版或不支援 Share API 的一般下載行為
         if(l === 'Single Page') {
             dlCanvas('canvas1', `${baseName}.png`);
         } else if(l === 'Multi Page' && c) {
@@ -895,21 +954,18 @@ const updateStateFromUI = () => {
     state.username = els.usr.value;
     localStorage.setItem('assetReportUsername', state.username);
     
-    // 如果 Theme 變更，套用 UI 切換與儲存
     if (state.theme !== els.theme.value) {
         state.theme = els.theme.value;
         localStorage.setItem('assetReportTheme', state.theme);
         applyTheme(state.theme);
     }
     
-    // 儲存 Layout 設定到快取中
     state.layout = els.layout.value;
     localStorage.setItem('assetReportLayout', state.layout);
 
     const tot = Math.floor(state.us_stock * state.exchange_rate + state.tw_stock);
     els.totCalc.value = tot;
 
-    // Calc YTD
     let ytdSum = 0;
     const mIdx = MONTHS.indexOf(state.month);
     historyRecords.forEach(r => {
@@ -945,6 +1001,7 @@ const renderCanvas = () => {
         generateImageP1();
         generateImageP2();
     }
+    renderUIChart(); // 同步更新 UI 組合圖表
 };
 
 const loadRecordToUI = (rec) => {
