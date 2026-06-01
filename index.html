@@ -188,6 +188,7 @@
                     <div>
                         <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Theme:</label>
                         <select id="inTheme" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700">
+                            <option value="system">System (Auto)</option>
                             <option value="light">Light</option>
                             <option value="dark">Dark</option>
                         </select>
@@ -242,7 +243,8 @@ const COLORS = {
 let state = {
     year: 2026, month: "January", us_stock: 35000.0, tw_stock: 1200000, us_deposit: 500.0, tw_deposit: 20000,
     monthly_added_twd: 36250, exchange_rate: 32.5, prev_total: 2300000, prev_us: 34000.0, prev_tw: 1150000,
-    ytd_deposit: 0, prev_exchange_rate: 32.0, leverage_ratio: 1.0, username: "", theme: "light", layout: "Multi Page"
+    ytd_deposit: 0, prev_exchange_rate: 32.0, leverage_ratio: 1.0, username: "", theme: "system", layout: "Multi Page",
+    actual_theme: "light" // 內部紀錄實際繪圖與 UI 使用的主題
 };
 let historyRecords = [];
 let isLoading = false;
@@ -318,12 +320,13 @@ const drawBackground = (ctx, C) => {
     ctx.fillRect(0, 0, CANVAS_SIZE.w, CANVAS_SIZE.h);
 
     // 加上半透明的覆蓋層，創造毛玻璃的質感
-    const overlayColor = state.theme === 'light' ? "rgba(255, 255, 255, 0.6)" : "rgba(15, 23, 42, 0.6)";
+    const overlayColor = state.actual_theme === 'light' ? "rgba(255, 255, 255, 0.6)" : "rgba(15, 23, 42, 0.6)";
     ctx.fillStyle = overlayColor;
     ctx.fillRect(0, 0, CANVAS_SIZE.w, CANVAS_SIZE.h);
 };
 
-const drawFooter = (ctx, C) => {
+// 修改：增加 signatureYOffset 讓不同排版可以自訂 IG ID 的垂直位置
+const drawFooter = (ctx, C, signatureYOffset = 100) => {
     const lineY = 1090;
     ctx.beginPath(); ctx.moveTo(80, lineY); ctx.lineTo(CANVAS_SIZE.w - 80, lineY);
     ctx.strokeStyle = C.border; ctx.lineWidth = 3; ctx.stroke();
@@ -336,7 +339,7 @@ const drawFooter = (ctx, C) => {
         const iconS = 50, gap = 15;
         const totalW = iconS + gap + signW;
         const startX = CANVAS_SIZE.w / 2 - totalW / 2;
-        const startY = lineY + 100;
+        const startY = lineY + signatureYOffset;
 
         if (igIconImg) {
             ctx.drawImage(igIconImg, startX, startY, iconS, iconS);
@@ -352,7 +355,7 @@ const drawFooter = (ctx, C) => {
 const generateImageSingle = () => {
     const c = document.getElementById('canvas1');
     const ctx = c.getContext('2d');
-    const C = COLORS[state.theme];
+    const C = COLORS[state.actual_theme];
     drawBackground(ctx, C);
 
     const title = `${state.month.substring(0,3)} ${state.year} Asset Report`;
@@ -406,11 +409,11 @@ const generateImageSingle = () => {
     drawCard(leftX, "US STOCK", state.us_stock, state.us_deposit, state.prev_us);
     drawCard(rightX, "TW STOCK", state.tw_stock, state.tw_deposit, state.prev_tw);
 
-    // Footer Ext
-    const lineY = 1090;
-    ctx.beginPath(); ctx.moveTo(80, lineY); ctx.lineTo(CANVAS_SIZE.w - 80, lineY);
-    ctx.strokeStyle = C.border; ctx.lineWidth = 3; ctx.stroke();
+    // Footer Ext (Single Page 專屬文字資訊)
+    // 交由 drawFooter 繪製上方分隔線，並將 IG ID 下移到 200 的位置避免與下方文字重疊
+    drawFooter(ctx, C, 200);
 
+    const lineY = 1090;
     const rateDiff = state.exchange_rate - state.prev_exchange_rate;
     const rPos = rateDiff >= 0;
     const alignX = 80;
@@ -422,14 +425,12 @@ const generateImageSingle = () => {
     drawText(ctx, `THIS MONTH ADDED: $${formatNum(state.monthly_added_twd)} TWD`, alignX, lineY + 80, 30, C.text_sub, "left", "middle");
     drawText(ctx, `YTD ADDED (Jan-Now): $${formatNum(state.ytd_deposit)} TWD`, alignX, lineY + 120, 30, C.text_sub, "left", "middle");
     drawText(ctx, `LEVERAGE RATIO: ${state.leverage_ratio}x`, alignX, lineY + 160, 30, C.text_sub, "left", "middle");
-
-    drawFooter(ctx, C);
 };
 
 const generateImageP1 = () => {
     const c = document.getElementById('canvas1');
     const ctx = c.getContext('2d');
-    const C = COLORS[state.theme];
+    const C = COLORS[state.actual_theme];
     drawBackground(ctx, C);
 
     const title = `${state.month.substring(0,3)} ${state.year} Asset Report`;
@@ -479,13 +480,14 @@ const generateImageP1 = () => {
     drawCard(leftX, "US STOCK", state.us_stock, state.us_deposit, state.prev_us);
     drawCard(rightX, "TW STOCK", state.tw_stock, state.tw_deposit, state.prev_tw);
 
-    drawFooter(ctx, C);
+    // Multi Page 模式預設 IG ID 在 100 的位置
+    drawFooter(ctx, C, 100);
 };
 
 const generateImageP2 = () => {
     const c = document.getElementById('canvas2');
     const ctx = c.getContext('2d');
-    const C = COLORS[state.theme];
+    const C = COLORS[state.actual_theme];
     drawBackground(ctx, C);
 
     const title = `${state.month.substring(0,3)} ${state.year} Details`;
@@ -547,7 +549,7 @@ const generateImageP2 = () => {
     ctx.fillStyle = "#3b82f6";
     ctx.fill();
 
-    // 台股區塊 - 修改為綠色
+    // 台股區塊 - 綠色
     ctx.beginPath();
     ctx.moveTo(px, py);
     ctx.arc(px, py, r, usEnd, usEnd + twPct * Math.PI * 2);
@@ -570,13 +572,44 @@ const generateImageP2 = () => {
     drawText(ctx, "US STOCK", lx + 40, ly1 - 10, 26, C.text_sub, "left", "middle");
     drawText(ctx, `${(usPct * 100).toFixed(1)}%`, lx + 40, ly1 + 25, 36, C.text_main, "left", "middle");
 
-    // 台股圖例 - 修改為綠色
+    // 台股圖例 - 綠色
     drawRoundRect(ctx, lx, ly2 - 20, 20, 20, 4, "#10b981"); // 綠色
     drawText(ctx, "TW STOCK", lx + 40, ly2 - 10, 26, C.text_sub, "left", "middle");
     drawText(ctx, `${(twPct * 100).toFixed(1)}%`, lx + 40, ly2 + 25, 36, C.text_main, "left", "middle");
 
-    drawFooter(ctx, C);
+    // Multi Page 模式預設 IG ID 在 100 的位置
+    drawFooter(ctx, C, 100);
 };
+
+// ==========================================
+// Theme 處理邏輯
+// ==========================================
+const applyTheme = (themeSetting) => {
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    let actualTheme = 'light';
+
+    if (themeSetting === 'system') {
+        actualTheme = prefersDark ? 'dark' : 'light';
+    } else {
+        actualTheme = themeSetting;
+    }
+
+    state.actual_theme = actualTheme; // 紀錄實際用來繪圖的主題
+
+    if (actualTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+    }
+};
+
+// 監聽系統主題變化 (當設定為 system 時即時反應)
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    if (state.theme === 'system') {
+        applyTheme('system');
+        renderCanvas();
+    }
+});
 
 // UI Logic
 const initApp = async () => {
@@ -606,16 +639,13 @@ const initApp = async () => {
         els.layout.value = cachedLayout;
     }
 
-    // 讀取獨立快取的 Theme 設定
+    // 讀取獨立快取的 Theme 設定並套用
     const cachedTheme = localStorage.getItem('assetReportTheme');
     if (cachedTheme) {
         state.theme = cachedTheme;
         els.theme.value = cachedTheme;
     }
-
-    // 初始化 UI 主題
-    if (state.theme === 'dark') document.documentElement.classList.add('dark');
-    else document.documentElement.classList.remove('dark');
+    applyTheme(state.theme);
 
     updateSelectors();
 
@@ -869,8 +899,7 @@ const updateStateFromUI = () => {
     if (state.theme !== els.theme.value) {
         state.theme = els.theme.value;
         localStorage.setItem('assetReportTheme', state.theme);
-        if (state.theme === 'dark') document.documentElement.classList.add('dark');
-        else document.documentElement.classList.remove('dark');
+        applyTheme(state.theme);
     }
     
     // 儲存 Layout 設定到快取中
