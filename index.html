@@ -390,7 +390,7 @@ const getChartData = () => {
     });
 };
 
-const drawComboChart = (ctx, cX, cY, cW, cH, chartData, C) => {
+const drawComboChart = (ctx, cX, cY, cW, cH, chartData, C, isUI = false) => {
     const maxVal = Math.max(...chartData.map(d => d.tw + d.us)) * 1.1 || 1;
 
     ctx.strokeStyle = C.border;
@@ -409,7 +409,7 @@ const drawComboChart = (ctx, cX, cY, cW, cH, chartData, C) => {
         label: d.label
     }));
 
-    const barW = Math.min(xStep * 0.4, 40);
+    const barW = Math.min(xStep * 0.4, isUI ? 25 : 40);
 
     // 1. 繪製疊加直條圖 (Stacked Bars)
     pts.forEach((p) => {
@@ -425,17 +425,17 @@ const drawComboChart = (ctx, cX, cY, cW, cH, chartData, C) => {
     // 2. 繪製折線圖 (僅連線總資產最高點)
     ctx.beginPath();
     pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.yTot) : ctx.lineTo(p.x, p.yTot));
-    ctx.strokeStyle = "#3b82f6"; ctx.lineWidth = 3; ctx.stroke();
+    ctx.strokeStyle = "#3b82f6"; ctx.lineWidth = isUI ? 2 : 3; ctx.stroke();
 
     // 3. 繪製節點與標籤 (使用英文月份縮寫作為 X 軸)
-    const stepLabel = Math.max(1, Math.ceil(pts.length / 8));
+    const stepLabel = Math.max(1, Math.ceil(pts.length / (isUI ? 6 : 8)));
     pts.forEach((p, i) => {
-        ctx.beginPath(); ctx.arc(p.x, p.yTot, 5, 0, Math.PI*2);
+        ctx.beginPath(); ctx.arc(p.x, p.yTot, isUI ? 3.5 : 5, 0, Math.PI*2);
         ctx.fillStyle = C.card_bg; ctx.fill();
-        ctx.strokeStyle = "#3b82f6"; ctx.lineWidth = 2.5; ctx.stroke();
+        ctx.strokeStyle = "#3b82f6"; ctx.lineWidth = isUI ? 2 : 2.5; ctx.stroke();
 
         if (i % stepLabel === 0 || i === pts.length - 1) {
-            drawText(ctx, p.label, p.x, cY + cH + 25, 24, C.text_sub, "center", "middle");
+            drawText(ctx, p.label, p.x, cY + cH + (isUI ? 20 : 25), isUI ? 14 : 24, C.text_sub, "center", "middle");
         }
     });
 
@@ -444,7 +444,7 @@ const drawComboChart = (ctx, cX, cY, cW, cH, chartData, C) => {
     for(let i=0; i<=3; i++) {
         const v = maxVal * (i/3);
         const y = cY + cH - (i/3)*cH;
-        drawText(ctx, `${(v/1000000).toFixed(1)}M`, cX - 20, y, 28, C.text_sub, "right", "middle");
+        drawText(ctx, `${(v/1000000).toFixed(1)}M`, cX - (isUI ? 12 : 20), y, isUI ? 16 : 28, C.text_sub, "right", "middle");
         if(i > 0) { 
             ctx.beginPath(); ctx.moveTo(cX, y); ctx.lineTo(cX+cW, y);
             ctx.strokeStyle = C.border; ctx.lineWidth = 1;
@@ -462,8 +462,7 @@ const renderUIChart = () => {
     ctx.clearRect(0, 0, c.width, c.height);
 
     const chartData = getChartData();
-    // 修改參數以完美配合統一的 drawComboChart 繪製屬性 (確保 UI 面板不被裁切字體)
-    drawComboChart(ctx, 100, 40, c.width - 140, c.height - 100, chartData, C);
+    drawComboChart(ctx, 80, 20, c.width - 110, c.height - 60, chartData, C, true);
 };
 
 const generateImageSingle = () => {
@@ -472,7 +471,8 @@ const generateImageSingle = () => {
     const C = COLORS[state.actual_theme];
     drawBackground(ctx, C);
 
-    const title = `${getDisplayDate()} ASSET REPORT`;
+    // 標題改為月份簡寫 + 年份
+    const title = `${state.month.substring(0, 3).toUpperCase()} ${state.year} ASSET REPORT`;
     const currentTotal = Math.floor(state.us_stock * state.exchange_rate + state.tw_stock);
     const CX = CANVAS_SIZE.w / 2;
 
@@ -541,7 +541,8 @@ const generateImageP1 = () => {
     const C = COLORS[state.actual_theme];
     drawBackground(ctx, C);
 
-    const title = `${getDisplayDate()} ASSET REPORT`;
+    // 標題改為月份簡寫 + 年份
+    const title = `${state.month.substring(0, 3).toUpperCase()} ${state.year} ASSET REPORT`;
     const currentTotal = Math.floor(state.us_stock * state.exchange_rate + state.tw_stock);
     const CX = CANVAS_SIZE.w / 2;
 
@@ -597,7 +598,8 @@ const generateImageP2 = () => {
     const C = COLORS[state.actual_theme];
     drawBackground(ctx, C);
 
-    const title = `${getDisplayDate()} DETAILS`;
+    // 標題改為月份簡寫 + 年份
+    const title = `${state.month.substring(0, 3).toUpperCase()} ${state.year} DETAILS`;
     const CX = CANVAS_SIZE.w / 2;
 
     drawText(ctx, title, CX, 100, 60, C.text_main, "center", "top");
