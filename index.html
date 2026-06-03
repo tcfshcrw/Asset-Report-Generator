@@ -11,13 +11,10 @@
             darkMode: 'class', 
         }
     </script>
-    <!-- Google Fonts: Noto Sans & M PLUS 1p -->
-    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+1p:wght@400;500;700;800&family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Noto Sans', sans-serif; }
+        body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
         .canvas-container { max-width: 100%; height: auto; border-radius: 0.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
         canvas { max-width: 100%; height: auto; }
-        .font-m-plus { font-family: 'M PLUS 1p', sans-serif; }
     </style>
     <script>
         const iconSvg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='110' fill='%233b82f6'/%3E%3Crect x='110' y='320' width='60' height='90' rx='15' fill='%23ffffff' opacity='0.6'/%3E%3Crect x='226' y='230' width='60' height='180' rx='15' fill='%23ffffff' opacity='0.8'/%3E%3Crect x='342' y='120' width='60' height='290' rx='15' fill='%23ffffff'/%3E%3Cpath d='M 140 330 L 256 240 L 372 130' stroke='%23fcd34d' stroke-width='30' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3Ccircle cx='372' cy='130' r='25' fill='%23fcd34d'/%3E%3C/svg%3E";
@@ -57,15 +54,11 @@
 </head>
 <body class="text-gray-800 dark:text-gray-100 bg-gray-50 dark:bg-gray-900 p-4 md:p-8 transition-colors duration-300">
 
-<!-- 用於強制瀏覽器預載入 M PLUS 1p 字體，以供 Canvas 即時使用 -->
-<div style="font-family: 'M PLUS 1p', sans-serif; font-weight: 700; position: absolute; visibility: hidden; width: 0; height: 0;">Preload</div>
-<div style="font-family: 'M PLUS 1p', sans-serif; font-weight: 400; position: absolute; visibility: hidden; width: 0; height: 0;">Preload</div>
-
 <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
     <!-- Controls Panel -->
     <div class="lg:col-span-5 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 transition-colors duration-300">
         <div class="mb-6">
-            <h2 class="text-2xl font-bold flex items-center gap-3 font-m-plus">
+            <h2 class="text-2xl font-bold flex items-center gap-3">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="w-8 h-8 drop-shadow-sm">
                     <rect width="512" height="512" rx="110" fill="#3b82f6"/>
                     <rect x="110" y="320" width="60" height="90" rx="15" fill="#ffffff" opacity="0.6"/>
@@ -82,12 +75,13 @@
         <!-- UI Asset Trend Chart -->
         <div class="mb-6 p-5 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition-colors duration-300">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="font-bold text-gray-800 dark:text-gray-100 font-m-plus">Asset Trend</h3>
+                <h3 class="font-bold text-gray-800 dark:text-gray-100">Asset Trend</h3>
                 <div class="flex gap-4 text-xs font-semibold">
                     <div class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-emerald-500"></span><span class="text-gray-600 dark:text-gray-400">TW Stock</span></div>
                     <div class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-blue-500"></span><span class="text-gray-600 dark:text-gray-400">US Stock</span></div>
                 </div>
             </div>
+            <!-- 調整 UI Canvas 的比例以符合大字體的空間需求 -->
             <canvas id="uiChartCanvas" width="880" height="380" class="w-full h-auto"></canvas>
         </div>
 
@@ -235,7 +229,7 @@
 
     <!-- Preview Panel -->
     <div class="lg:col-span-7 bg-gray-200 dark:bg-gray-800 p-6 rounded-xl border border-gray-300 dark:border-gray-700 flex flex-col items-center justify-start overflow-hidden transition-colors duration-300">
-        <h2 class="text-xl font-bold mb-4 w-full text-left font-m-plus">Preview</h2>
+        <h2 class="text-xl font-bold mb-4 w-full text-left">Preview</h2>
         <div id="previewContainer" class="flex flex-col gap-4 justify-center items-center w-full overflow-x-auto">
             <canvas id="canvas1" class="canvas-container" width="1080" height="1350"></canvas>
             <canvas id="canvas2" class="canvas-container hidden" width="1080" height="1350"></canvas>
@@ -248,6 +242,9 @@ const CANVAS_SIZE = { w: 1080, h: 1350 };
 const IG_ICON_URL = "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Instagram_logo_2016.svg/120px-Instagram_logo_2016.svg.png";
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 let igIconImg = null;
+
+// 定義共用的字體變數，確保 Canvas 繪製時有一致的呈現
+const FONT_FAMILY = 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
 
 const COLORS = {
     light: { bg: "#FFFFFF", card_bg: "#FFFFFF", text_main: "#111827", text_sub: "#6B7280", border: "#E5E7EB", up: "#DC2626", down: "#16A34A", up_bg: "#FEF2F2", down_bg: "#F0FDF4" },
@@ -307,7 +304,7 @@ const drawRoundRect = (ctx, x, y, w, h, r, fill, stroke, strokeWidth) => {
 };
 
 const drawText = (ctx, text, x, y, size, color, align = "center", baseline = "middle", fontStr = null) => {
-    ctx.font = fontStr || `${size}px 'M PLUS 1p', sans-serif`;
+    ctx.font = fontStr || `${size}px ${FONT_FAMILY}`;
     ctx.fillStyle = color;
     ctx.textAlign = align;
     ctx.textBaseline = baseline;
@@ -347,7 +344,7 @@ const drawFooter = (ctx, C, signatureYOffset = 100) => {
 
     if (state.username && state.username.trim() !== "" && state.username !== "Default_ID") {
         const signText = `@${state.username}`;
-        ctx.font = `35px 'M PLUS 1p', sans-serif`;
+        ctx.font = `35px ${FONT_FAMILY}`;
         const signW = ctx.measureText(signText).width;
         const iconS = 50, gap = 15;
         const totalW = iconS + gap + signW;
@@ -479,17 +476,17 @@ const generateImageSingle = () => {
     const currentTotal = Math.floor(state.us_stock * state.exchange_rate + state.tw_stock);
     const CX = CANVAS_SIZE.w / 2;
 
-    drawText(ctx, title, CX, 100, 60, C.text_main, "center", "top", "bold 60px 'M PLUS 1p', sans-serif");
+    drawText(ctx, title, CX, 100, 60, C.text_main, "center", "top", `bold 60px ${FONT_FAMILY}`);
     
     const tag = "MONTHLY REPORT";
-    ctx.font = `25px 'M PLUS 1p', sans-serif`;
+    ctx.font = `25px ${FONT_FAMILY}`;
     const tagW = ctx.measureText(tag).width;
     drawRoundRect(ctx, CX - tagW/2 - 45, 187, tagW + 90, 70, 35, "#F3F4F6", null, 0);
     drawText(ctx, tag, CX, 222, 25, "#6B7280", "center", "middle");
 
     drawText(ctx, "TOTAL ASSETS", CX, 340, 45, C.text_sub, "center", "top");
     const totStr = formatNum(currentTotal);
-    ctx.font = `85px 'M PLUS 1p', sans-serif`;
+    ctx.font = `85px ${FONT_FAMILY}`;
     const numW = ctx.measureText(totStr).width;
     const dolStr = "TWD";
     const dolW = ctx.measureText(dolStr).width;
@@ -502,7 +499,7 @@ const generateImageSingle = () => {
     const { diff, str, pct } = calcGrowth(state.prev_total, currentTotal);
     const isPos = diff >= 0;
     const trendStr = `${isPos ? '▲' : '▼'} ${str} (${pct})`;
-    ctx.font = `45px 'M PLUS 1p', sans-serif`;
+    ctx.font = `45px ${FONT_FAMILY}`;
     const trendW = ctx.measureText(trendStr).width;
     drawRoundRect(ctx, CX - trendW/2 - 60, 530, trendW + 120, 90, 45, isPos ? C.up_bg : C.down_bg, null, 0);
     drawText(ctx, trendStr, CX, 575, 45, isPos ? C.up : C.down, "center", "middle");
@@ -530,7 +527,7 @@ const generateImageSingle = () => {
     const rPos = rateDiff >= 0;
     const alignX = 80;
     drawText(ctx, `EXCHANGE RATE: 1 USD = ${state.exchange_rate} TWD`, alignX, lineY + 40, 30, C.text_sub, "left", "middle");
-    ctx.font = `30px 'M PLUS 1p', sans-serif`;
+    ctx.font = `30px ${FONT_FAMILY}`;
     const rW = ctx.measureText(`EXCHANGE RATE: 1 USD = ${state.exchange_rate} TWD`).width;
     drawText(ctx, ` (${rPos ? '▲' : '▼'} ${Math.abs(rateDiff).toFixed(3)})`, alignX + rW, lineY + 40, 30, rPos ? C.up : C.down, "left", "middle");
 
@@ -549,17 +546,17 @@ const generateImageP1 = () => {
     const currentTotal = Math.floor(state.us_stock * state.exchange_rate + state.tw_stock);
     const CX = CANVAS_SIZE.w / 2;
 
-    drawText(ctx, title, CX, 100, 60, C.text_main, "center", "top", "bold 60px 'M PLUS 1p', sans-serif");
+    drawText(ctx, title, CX, 100, 60, C.text_main, "center", "top", `bold 60px ${FONT_FAMILY}`);
     
     const tag = "MONTHLY REPORT";
-    ctx.font = `25px 'M PLUS 1p', sans-serif`;
+    ctx.font = `25px ${FONT_FAMILY}`;
     const tagW = ctx.measureText(tag).width;
     drawRoundRect(ctx, CX - tagW/2 - 45, 187, tagW + 90, 70, 35, "#F3F4F6", null, 0);
     drawText(ctx, tag, CX, 222, 25, "#6B7280", "center", "middle");
 
     drawText(ctx, "TOTAL ASSETS", CX, 340, 45, C.text_sub, "center", "top");
     const totStr = formatNum(currentTotal);
-    ctx.font = `85px 'M PLUS 1p', sans-serif`;
+    ctx.font = `85px ${FONT_FAMILY}`;
     const numW = ctx.measureText(totStr).width;
     const dolStr = "TWD";
     const dolW = ctx.measureText(dolStr).width;
@@ -572,7 +569,7 @@ const generateImageP1 = () => {
     const { diff, str, pct } = calcGrowth(state.prev_total, currentTotal);
     const isPos = diff >= 0;
     const trendStr = `${isPos ? '▲' : '▼'} ${str} (${pct})`;
-    ctx.font = `45px 'M PLUS 1p', sans-serif`;
+    ctx.font = `45px ${FONT_FAMILY}`;
     const trendW = ctx.measureText(trendStr).width;
     drawRoundRect(ctx, CX - trendW/2 - 60, 530, trendW + 120, 90, 45, isPos ? C.up_bg : C.down_bg, null, 0);
     drawText(ctx, trendStr, CX, 575, 45, isPos ? C.up : C.down, "center", "middle");
@@ -605,10 +602,10 @@ const generateImageP2 = () => {
     const title = `${state.month.substring(0, 3).toUpperCase()} ${state.year} DETAILS`;
     const CX = CANVAS_SIZE.w / 2;
 
-    drawText(ctx, title, CX, 100, 60, C.text_main, "center", "top", "bold 60px 'M PLUS 1p', sans-serif");
+    drawText(ctx, title, CX, 100, 60, C.text_main, "center", "top", `bold 60px ${FONT_FAMILY}`);
     
     const tag = "FUNDING & FX";
-    ctx.font = `25px 'M PLUS 1p', sans-serif`;
+    ctx.font = `25px ${FONT_FAMILY}`;
     const tagW = ctx.measureText(tag).width;
     drawRoundRect(ctx, CX - tagW/2 - 45, 187, tagW + 90, 70, 35, "#F3F4F6", null, 0);
     drawText(ctx, tag, CX, 222, 25, "#6B7280", "center", "middle");
@@ -621,7 +618,7 @@ const generateImageP2 = () => {
         drawRoundRect(ctx, x, y, cardW, cardH, 30, C.card_bg, C.border, 4);
         drawText(ctx, lbl, x + cardW/2, y + 45, 28, C.text_sub, "center", "middle");
         if(valChange) {
-            ctx.font = `32px 'M PLUS 1p', sans-serif`;
+            ctx.font = `32px ${FONT_FAMILY}`;
             const w1 = ctx.measureText(valMain).width;
             const w2 = ctx.measureText(valChange).width;
             const sx = x + cardW/2 - (w1+w2)/2;
@@ -738,11 +735,8 @@ const initApp = async () => {
     img.onload = () => { igIconImg = img; renderCanvas(); }; 
     img.src = IG_ICON_URL;
 
-    // 確保字體完全載入後再繪製，防止初次繪製時回退到系統預設字體
-    await document.fonts.ready;
-    
-    attachListeners();
-    renderCanvas();
+    // 延遲繪製以確保圖表正確抓取系統字體
+    requestAnimationFrame(() => renderCanvas());
 };
 
 const attachListeners = () => {
