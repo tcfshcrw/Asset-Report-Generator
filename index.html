@@ -527,12 +527,12 @@ const generateImageSingle = () => {
 
     const drawCard = (x, cardTitle, valLines, bottomDep, pVal, totalVal) => {
         drawRoundRect(ctx, x, gridY, cardW, cardH, 40, C.card_bg, C.border, 5);
-        drawText(ctx, cardTitle, x + 40, gridY + 50, 35, C.text_sub, "left", "middle");
+        drawText(ctx, cardTitle, x + 40, gridY + 50, 42, C.text_sub, "left", "middle");
         
         let currentY = gridY + 115;
         
         valLines.forEach((item, i) => {
-            drawText(ctx, item.label, x + 40, currentY, 36, C.text_main, "left", "middle");
+            drawText(ctx, item.label, x + 40, currentY, 40, C.text_main, "left", "middle");
             if(item.dep > 0) {
                 currentY += 35;
                 const depStr = item.curr ? `Dep: +${formatNum(item.dep)} ${item.curr}` : `Dep: +${formatNum(item.dep)}`;
@@ -620,12 +620,12 @@ const generateImageP1 = () => {
 
     const drawCard = (x, cardTitle, valLines, bottomDep, pVal, totalVal) => {
         drawRoundRect(ctx, x, gridY, cardW, cardH, 40, C.card_bg, C.border, 5);
-        drawText(ctx, cardTitle, x + 40, gridY + 50, 35, C.text_sub, "left", "middle");
+        drawText(ctx, cardTitle, x + 40, gridY + 50, 42, C.text_sub, "left", "middle");
         
         let currentY = gridY + 115;
         
         valLines.forEach((item, i) => {
-            drawText(ctx, item.label, x + 40, currentY, 36, C.text_main, "left", "middle");
+            drawText(ctx, item.label, x + 40, currentY, 40, C.text_main, "left", "middle");
             if(item.dep > 0) {
                 currentY += 35;
                 const depStr = item.curr ? `Dep: +${formatNum(item.dep)} ${item.curr}` : `Dep: +${formatNum(item.dep)}`;
