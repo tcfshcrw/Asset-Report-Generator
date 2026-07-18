@@ -529,20 +529,21 @@ const generateImageSingle = () => {
         drawRoundRect(ctx, x, gridY, cardW, cardH, 40, C.card_bg, C.border, 5);
         drawText(ctx, cardTitle, x + 40, gridY + 50, 35, C.text_sub, "left", "middle");
         
-        let valY = gridY + 115;
-        let lineSpacing = valLines.length > 1 ? 60 : 50;
+        let currentY = gridY + 115;
         
         valLines.forEach((item, i) => {
-            drawText(ctx, item.label, x + 40, valY + i * lineSpacing, 36, C.text_main, "left", "middle");
+            drawText(ctx, item.label, x + 40, currentY, 36, C.text_main, "left", "middle");
             if(item.dep > 0) {
-                ctx.font = `36px ${FONT_FAMILY}`;
-                const labelW = ctx.measureText(item.label).width;
-                drawText(ctx, `Dep: +${formatNum(item.dep)}`, x + 40 + labelW + 15, valY + i * lineSpacing, 20, C.text_sub, "left", "middle");
+                currentY += 35;
+                drawText(ctx, `Dep: +${formatNum(item.dep)}`, x + cardW - 40, currentY, 22, C.text_sub, "right", "middle");
+                currentY += 45;
+            } else {
+                currentY += 60;
             }
         });
         
         if (bottomDep > 0) {
-            drawText(ctx, `Dep: +${formatNum(bottomDep)}`, x + 40, gridY + 230, 25, C.text_sub, "left", "middle");
+            drawText(ctx, `Dep: +${formatNum(bottomDep)}`, x + cardW - 40, gridY + 230, 25, C.text_sub, "right", "middle");
         }
         
         const g = calcGrowth(pVal, totalVal);
@@ -620,20 +621,21 @@ const generateImageP1 = () => {
         drawRoundRect(ctx, x, gridY, cardW, cardH, 40, C.card_bg, C.border, 5);
         drawText(ctx, cardTitle, x + 40, gridY + 50, 35, C.text_sub, "left", "middle");
         
-        let valY = gridY + 115;
-        let lineSpacing = valLines.length > 1 ? 60 : 50;
+        let currentY = gridY + 115;
         
         valLines.forEach((item, i) => {
-            drawText(ctx, item.label, x + 40, valY + i * lineSpacing, 36, C.text_main, "left", "middle");
+            drawText(ctx, item.label, x + 40, currentY, 36, C.text_main, "left", "middle");
             if(item.dep > 0) {
-                ctx.font = `36px ${FONT_FAMILY}`;
-                const labelW = ctx.measureText(item.label).width;
-                drawText(ctx, `Dep: +${formatNum(item.dep)}`, x + 40 + labelW + 15, valY + i * lineSpacing, 20, C.text_sub, "left", "middle");
+                currentY += 35;
+                drawText(ctx, `Dep: +${formatNum(item.dep)}`, x + cardW - 40, currentY, 22, C.text_sub, "right", "middle");
+                currentY += 45;
+            } else {
+                currentY += 60;
             }
         });
         
         if (bottomDep > 0) {
-            drawText(ctx, `Dep: +${formatNum(bottomDep)}`, x + 40, gridY + 230, 25, C.text_sub, "left", "middle");
+            drawText(ctx, `Dep: +${formatNum(bottomDep)}`, x + cardW - 40, gridY + 230, 25, C.text_sub, "right", "middle");
         }
         
         const g = calcGrowth(pVal, totalVal);
