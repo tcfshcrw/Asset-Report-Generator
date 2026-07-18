@@ -532,7 +532,7 @@ const generateImageSingle = () => {
         let currentY = gridY + 115;
         
         valLines.forEach((item, i) => {
-            drawText(ctx, item.label, x + 40, currentY, 40, C.text_main, "left", "middle");
+            drawText(ctx, item.label, x + 40, currentY, 36, C.text_main, "left", "middle");
             if(item.dep > 0) {
                 currentY += 35;
                 const depStr = item.curr ? `Dep: +${formatNum(item.dep)} ${item.curr}` : `Dep: +${formatNum(item.dep)}`;
@@ -625,7 +625,7 @@ const generateImageP1 = () => {
         let currentY = gridY + 115;
         
         valLines.forEach((item, i) => {
-            drawText(ctx, item.label, x + 40, currentY, 40, C.text_main, "left", "middle");
+            drawText(ctx, item.label, x + 40, currentY, 36, C.text_main, "left", "middle");
             if(item.dep > 0) {
                 currentY += 35;
                 const depStr = item.curr ? `Dep: +${formatNum(item.dep)} ${item.curr}` : `Dep: +${formatNum(item.dep)}`;
