@@ -531,9 +531,9 @@ const generateImageSingle = () => {
         
         let valY = gridY + 115;
         valLines.forEach((item, i) => {
-            drawText(ctx, item.label, x + 40, valY + i * 50, 42, C.text_main, "left", "middle");
+            drawText(ctx, item.label, x + 40, valY + i * 50, 36, C.text_main, "left", "middle");
             if(item.dep > 0) {
-                drawText(ctx, `Dep: +${formatNum(item.dep)}`, x + cardW - 40, valY + i * 50, 22, C.text_sub, "right", "middle");
+                drawText(ctx, `Dep: +${formatNum(item.dep)}`, x + cardW - 30, valY + i * 50, 20, C.text_sub, "right", "middle");
             }
         });
         
@@ -618,9 +618,9 @@ const generateImageP1 = () => {
         
         let valY = gridY + 115;
         valLines.forEach((item, i) => {
-            drawText(ctx, item.label, x + 40, valY + i * 50, 42, C.text_main, "left", "middle");
+            drawText(ctx, item.label, x + 40, valY + i * 50, 36, C.text_main, "left", "middle");
             if(item.dep > 0) {
-                drawText(ctx, `Dep: +${formatNum(item.dep)}`, x + cardW - 40, valY + i * 50, 22, C.text_sub, "right", "middle");
+                drawText(ctx, `Dep: +${formatNum(item.dep)}`, x + cardW - 30, valY + i * 50, 20, C.text_sub, "right", "middle");
             }
         });
         
