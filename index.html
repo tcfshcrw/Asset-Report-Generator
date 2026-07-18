@@ -593,14 +593,20 @@ const generateImageSingle = () => {
         ctx.restore();
     };
 
-    drawCard(leftX, "GLOBAL ASSETS", [
-        { label: `${formatNum(state.us_stock)} USD`, dep: state.us_deposit, curr: 'USD', diff: state.us_stock - state.prev_us },
-        { label: `${formatNum(state.global_tw_stock)} TWD`, dep: state.global_tw_deposit, curr: 'TWD', diff: state.global_tw_stock - state.prev_global_tw }
-    ], 0, state.prev_us * state.prev_exchange_rate + state.prev_global_tw, state.us_stock * state.exchange_rate + state.global_tw_stock);
+    let globalLines1 = [];
+    if (state.us_stock > 0 || state.prev_us > 0 || state.us_deposit > 0) {
+        globalLines1.push({ label: `${formatNum(state.us_stock)} USD`, dep: state.us_deposit, curr: 'USD', diff: state.us_stock - state.prev_us });
+    }
+    if (state.global_tw_stock > 0 || state.prev_global_tw > 0 || state.global_tw_deposit > 0) {
+        globalLines1.push({ label: `${formatNum(state.global_tw_stock)} TWD`, dep: state.global_tw_deposit, curr: 'TWD', diff: state.global_tw_stock - state.prev_global_tw });
+    }
+    drawCard(leftX, "GLOBAL", globalLines1, 0, state.prev_us * state.prev_exchange_rate + state.prev_global_tw, state.us_stock * state.exchange_rate + state.global_tw_stock);
 
-    drawCard(rightX, "LOCAL STOCK", [
-        { label: `${formatNum(state.tw_stock)} TWD`, dep: 0 }
-    ], state.tw_deposit, state.prev_tw, state.tw_stock);
+    let localLines1 = [];
+    if (state.tw_stock > 0 || state.prev_tw > 0 || state.tw_deposit > 0) {
+        localLines1.push({ label: `${formatNum(state.tw_stock)} TWD`, dep: state.tw_deposit, curr: 'TWD' });
+    }
+    drawCard(rightX, "LOCAL", localLines1, 0, state.prev_tw, state.tw_stock);
 
     drawFooter(ctx, C, 200);
 
@@ -727,14 +733,20 @@ const generateImageP1 = () => {
         ctx.restore();
     };
 
-    drawCard(leftX, "GLOBAL ASSETS", [
-        { label: `${formatNum(state.us_stock)} USD`, dep: state.us_deposit, curr: 'USD', diff: state.us_stock - state.prev_us },
-        { label: `${formatNum(state.global_tw_stock)} TWD`, dep: state.global_tw_deposit, curr: 'TWD', diff: state.global_tw_stock - state.prev_global_tw }
-    ], 0, state.prev_us * state.prev_exchange_rate + state.prev_global_tw, state.us_stock * state.exchange_rate + state.global_tw_stock);
+    let globalLines2 = [];
+    if (state.us_stock > 0 || state.prev_us > 0 || state.us_deposit > 0) {
+        globalLines2.push({ label: `${formatNum(state.us_stock)} USD`, dep: state.us_deposit, curr: 'USD', diff: state.us_stock - state.prev_us });
+    }
+    if (state.global_tw_stock > 0 || state.prev_global_tw > 0 || state.global_tw_deposit > 0) {
+        globalLines2.push({ label: `${formatNum(state.global_tw_stock)} TWD`, dep: state.global_tw_deposit, curr: 'TWD', diff: state.global_tw_stock - state.prev_global_tw });
+    }
+    drawCard(leftX, "GLOBAL", globalLines2, 0, state.prev_us * state.prev_exchange_rate + state.prev_global_tw, state.us_stock * state.exchange_rate + state.global_tw_stock);
 
-    drawCard(rightX, "LOCAL STOCK", [
-        { label: `${formatNum(state.tw_stock)} TWD`, dep: 0 }
-    ], state.tw_deposit, state.prev_tw, state.tw_stock);
+    let localLines2 = [];
+    if (state.tw_stock > 0 || state.prev_tw > 0 || state.tw_deposit > 0) {
+        localLines2.push({ label: `${formatNum(state.tw_stock)} TWD`, dep: state.tw_deposit, curr: 'TWD' });
+    }
+    drawCard(rightX, "LOCAL", localLines2, 0, state.prev_tw, state.tw_stock);
 
     drawFooter(ctx, C, 100);
 };
