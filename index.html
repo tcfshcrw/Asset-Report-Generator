@@ -549,7 +549,7 @@ const generateImageSingle = () => {
     drawCard(leftX, "GLOBAL ASSETS", [
         { label: `USD: $${formatNum(state.us_stock)}`, dep: state.us_deposit },
         { label: `TWD: $${formatNum(state.global_tw_stock)}`, dep: state.global_tw_deposit }
-    ], 0, state.prev_us * state.exchange_rate + state.prev_global_tw, state.us_stock * state.exchange_rate + state.global_tw_stock);
+    ], 0, state.prev_us * state.prev_exchange_rate + state.prev_global_tw, state.us_stock * state.exchange_rate + state.global_tw_stock);
 
     drawCard(rightX, "TW STOCK", [
         { label: `TWD: $${formatNum(state.tw_stock)}`, dep: 0 }
@@ -636,7 +636,7 @@ const generateImageP1 = () => {
     drawCard(leftX, "GLOBAL ASSETS", [
         { label: `USD: $${formatNum(state.us_stock)}`, dep: state.us_deposit },
         { label: `TWD: $${formatNum(state.global_tw_stock)}`, dep: state.global_tw_deposit }
-    ], 0, state.prev_us * state.exchange_rate + state.prev_global_tw, state.us_stock * state.exchange_rate + state.global_tw_stock);
+    ], 0, state.prev_us * state.prev_exchange_rate + state.prev_global_tw, state.us_stock * state.exchange_rate + state.global_tw_stock);
 
     drawCard(rightX, "TW STOCK", [
         { label: `TWD: $${formatNum(state.tw_stock)}`, dep: 0 }
