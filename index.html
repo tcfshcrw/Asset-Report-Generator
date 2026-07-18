@@ -567,8 +567,8 @@ const generateImageSingle = () => {
     ], 0, state.prev_us * state.prev_exchange_rate + state.prev_global_tw, state.us_stock * state.exchange_rate + state.global_tw_stock);
 
     drawCard(rightX, "LOCAL STOCK", [
-        { label: `${formatNum(state.tw_stock)} TWD`, dep: state.tw_deposit, curr: 'TWD', diff: state.tw_stock - state.prev_tw }
-    ], 0, state.prev_tw, state.tw_stock);
+        { label: `${formatNum(state.tw_stock)} TWD`, dep: 0 }
+    ], state.tw_deposit, state.prev_tw, state.tw_stock);
 
     drawFooter(ctx, C, 200);
 
@@ -669,8 +669,8 @@ const generateImageP1 = () => {
     ], 0, state.prev_us * state.prev_exchange_rate + state.prev_global_tw, state.us_stock * state.exchange_rate + state.global_tw_stock);
 
     drawCard(rightX, "LOCAL STOCK", [
-        { label: `${formatNum(state.tw_stock)} TWD`, dep: state.tw_deposit, curr: 'TWD', diff: state.tw_stock - state.prev_tw }
-    ], 0, state.prev_tw, state.tw_stock);
+        { label: `${formatNum(state.tw_stock)} TWD`, dep: 0 }
+    ], state.tw_deposit, state.prev_tw, state.tw_stock);
 
     drawFooter(ctx, C, 100);
 };
