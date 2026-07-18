@@ -533,6 +533,15 @@ const generateImageSingle = () => {
         
         valLines.forEach((item, i) => {
             drawText(ctx, item.label, x + 40, currentY, 36, C.text_main, "left", "middle");
+            
+            if (item.diff !== undefined) {
+                ctx.font = `36px ${FONT_FAMILY}`;
+                const labelW = ctx.measureText(item.label).width;
+                const diffPos = item.diff >= 0;
+                const diffStr = diffPos ? `▲ +${formatNum(item.diff)}` : `▼ ${formatNum(item.diff)}`;
+                drawText(ctx, `(${diffStr})`, x + 40 + labelW + 15, currentY, 24, diffPos ? C.up : C.down, "left", "middle");
+            }
+            
             if(item.dep > 0) {
                 currentY += 35;
                 const depStr = item.curr ? `Dep: +${formatNum(item.dep)} ${item.curr}` : `Dep: +${formatNum(item.dep)}`;
@@ -553,12 +562,12 @@ const generateImageSingle = () => {
     };
 
     drawCard(leftX, "GLOBAL ASSETS", [
-        { label: `${formatNum(state.us_stock)} USD`, dep: state.us_deposit, curr: 'USD' },
-        { label: `${formatNum(state.global_tw_stock)} TWD`, dep: state.global_tw_deposit, curr: 'TWD' }
+        { label: `${formatNum(state.us_stock)} USD`, dep: state.us_deposit, curr: 'USD', diff: state.us_stock - state.prev_us },
+        { label: `${formatNum(state.global_tw_stock)} TWD`, dep: state.global_tw_deposit, curr: 'TWD', diff: state.global_tw_stock - state.prev_global_tw }
     ], 0, state.prev_us * state.prev_exchange_rate + state.prev_global_tw, state.us_stock * state.exchange_rate + state.global_tw_stock);
 
     drawCard(rightX, "LOCAL STOCK", [
-        { label: `${formatNum(state.tw_stock)} TWD`, dep: state.tw_deposit, curr: 'TWD' }
+        { label: `${formatNum(state.tw_stock)} TWD`, dep: state.tw_deposit, curr: 'TWD', diff: state.tw_stock - state.prev_tw }
     ], 0, state.prev_tw, state.tw_stock);
 
     drawFooter(ctx, C, 200);
@@ -626,6 +635,15 @@ const generateImageP1 = () => {
         
         valLines.forEach((item, i) => {
             drawText(ctx, item.label, x + 40, currentY, 36, C.text_main, "left", "middle");
+            
+            if (item.diff !== undefined) {
+                ctx.font = `36px ${FONT_FAMILY}`;
+                const labelW = ctx.measureText(item.label).width;
+                const diffPos = item.diff >= 0;
+                const diffStr = diffPos ? `▲ +${formatNum(item.diff)}` : `▼ ${formatNum(item.diff)}`;
+                drawText(ctx, `(${diffStr})`, x + 40 + labelW + 15, currentY, 24, diffPos ? C.up : C.down, "left", "middle");
+            }
+            
             if(item.dep > 0) {
                 currentY += 35;
                 const depStr = item.curr ? `Dep: +${formatNum(item.dep)} ${item.curr}` : `Dep: +${formatNum(item.dep)}`;
@@ -646,12 +664,12 @@ const generateImageP1 = () => {
     };
 
     drawCard(leftX, "GLOBAL ASSETS", [
-        { label: `${formatNum(state.us_stock)} USD`, dep: state.us_deposit, curr: 'USD' },
-        { label: `${formatNum(state.global_tw_stock)} TWD`, dep: state.global_tw_deposit, curr: 'TWD' }
+        { label: `${formatNum(state.us_stock)} USD`, dep: state.us_deposit, curr: 'USD', diff: state.us_stock - state.prev_us },
+        { label: `${formatNum(state.global_tw_stock)} TWD`, dep: state.global_tw_deposit, curr: 'TWD', diff: state.global_tw_stock - state.prev_global_tw }
     ], 0, state.prev_us * state.prev_exchange_rate + state.prev_global_tw, state.us_stock * state.exchange_rate + state.global_tw_stock);
 
     drawCard(rightX, "LOCAL STOCK", [
-        { label: `${formatNum(state.tw_stock)} TWD`, dep: state.tw_deposit, curr: 'TWD' }
+        { label: `${formatNum(state.tw_stock)} TWD`, dep: state.tw_deposit, curr: 'TWD', diff: state.tw_stock - state.prev_tw }
     ], 0, state.prev_tw, state.tw_stock);
 
     drawFooter(ctx, C, 100);
