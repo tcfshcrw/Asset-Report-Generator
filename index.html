@@ -532,15 +532,34 @@ const generateImageSingle = () => {
         let currentY = gridY + 115;
         
         valLines.forEach((item, i) => {
-            drawText(ctx, item.label, x + 40, currentY, 36, C.text_main, "left", "middle");
-            
+            ctx.font = `36px ${FONT_FAMILY}`;
+            const labelW = ctx.measureText(item.label).width;
+            let diffW = 0;
+            let diffStr = "";
+            let diffPos = true;
             if (item.diff !== undefined) {
-                ctx.font = `36px ${FONT_FAMILY}`;
-                const labelW = ctx.measureText(item.label).width;
-                const diffPos = item.diff >= 0;
-                const diffStr = diffPos ? `▲ +${formatNum(item.diff)}` : `▼ ${formatNum(item.diff)}`;
-                drawText(ctx, `(${diffStr})`, x + 40 + labelW + 15, currentY, 24, diffPos ? C.up : C.down, "left", "middle");
+                diffPos = item.diff >= 0;
+                diffStr = diffPos ? `▲ +${formatNum(item.diff)}` : `▼ ${formatNum(item.diff)}`;
+                ctx.font = `24px ${FONT_FAMILY}`;
+                diffW = ctx.measureText(`(${diffStr})`).width + 15;
             }
+            
+            const totalW = labelW + diffW;
+            const maxW = cardW - 60;
+            let scale = 1;
+            if (totalW > maxW) {
+                scale = maxW / totalW;
+            }
+            
+            ctx.save();
+            ctx.translate(x + 40, currentY);
+            ctx.scale(scale, scale);
+            
+            drawText(ctx, item.label, 0, 0, 36, C.text_main, "left", "middle");
+            if (item.diff !== undefined) {
+                drawText(ctx, `(${diffStr})`, labelW + 15, 0, 24, diffPos ? C.up : C.down, "left", "middle");
+            }
+            ctx.restore();
             
             if(item.dep > 0) {
                 currentY += 35;
@@ -558,7 +577,20 @@ const generateImageSingle = () => {
         
         const g = calcGrowth(pVal, totalVal);
         const gPos = g.diff >= 0;
-        drawText(ctx, `${gPos ? '▲' : '▼'} ${g.str} (${g.pct})`, x + 40, gridY + 290, 35, gPos ? C.up : C.down, "left", "middle");
+        const gStr = `${gPos ? '▲' : '▼'} ${g.str} (${g.pct})`;
+        
+        ctx.font = `35px ${FONT_FAMILY}`;
+        const gW = ctx.measureText(gStr).width;
+        let gScale = 1;
+        if (gW > cardW - 60) {
+            gScale = (cardW - 60) / gW;
+        }
+        
+        ctx.save();
+        ctx.translate(x + 40, gridY + 290);
+        ctx.scale(gScale, gScale);
+        drawText(ctx, gStr, 0, 0, 35, gPos ? C.up : C.down, "left", "middle");
+        ctx.restore();
     };
 
     drawCard(leftX, "GLOBAL ASSETS", [
@@ -634,15 +666,34 @@ const generateImageP1 = () => {
         let currentY = gridY + 115;
         
         valLines.forEach((item, i) => {
-            drawText(ctx, item.label, x + 40, currentY, 36, C.text_main, "left", "middle");
-            
+            ctx.font = `36px ${FONT_FAMILY}`;
+            const labelW = ctx.measureText(item.label).width;
+            let diffW = 0;
+            let diffStr = "";
+            let diffPos = true;
             if (item.diff !== undefined) {
-                ctx.font = `36px ${FONT_FAMILY}`;
-                const labelW = ctx.measureText(item.label).width;
-                const diffPos = item.diff >= 0;
-                const diffStr = diffPos ? `▲ +${formatNum(item.diff)}` : `▼ ${formatNum(item.diff)}`;
-                drawText(ctx, `(${diffStr})`, x + 40 + labelW + 15, currentY, 24, diffPos ? C.up : C.down, "left", "middle");
+                diffPos = item.diff >= 0;
+                diffStr = diffPos ? `▲ +${formatNum(item.diff)}` : `▼ ${formatNum(item.diff)}`;
+                ctx.font = `24px ${FONT_FAMILY}`;
+                diffW = ctx.measureText(`(${diffStr})`).width + 15;
             }
+            
+            const totalW = labelW + diffW;
+            const maxW = cardW - 60;
+            let scale = 1;
+            if (totalW > maxW) {
+                scale = maxW / totalW;
+            }
+            
+            ctx.save();
+            ctx.translate(x + 40, currentY);
+            ctx.scale(scale, scale);
+            
+            drawText(ctx, item.label, 0, 0, 36, C.text_main, "left", "middle");
+            if (item.diff !== undefined) {
+                drawText(ctx, `(${diffStr})`, labelW + 15, 0, 24, diffPos ? C.up : C.down, "left", "middle");
+            }
+            ctx.restore();
             
             if(item.dep > 0) {
                 currentY += 35;
@@ -660,7 +711,20 @@ const generateImageP1 = () => {
         
         const g = calcGrowth(pVal, totalVal);
         const gPos = g.diff >= 0;
-        drawText(ctx, `${gPos ? '▲' : '▼'} ${g.str} (${g.pct})`, x + 40, gridY + 290, 35, gPos ? C.up : C.down, "left", "middle");
+        const gStr = `${gPos ? '▲' : '▼'} ${g.str} (${g.pct})`;
+        
+        ctx.font = `35px ${FONT_FAMILY}`;
+        const gW = ctx.measureText(gStr).width;
+        let gScale = 1;
+        if (gW > cardW - 60) {
+            gScale = (cardW - 60) / gW;
+        }
+        
+        ctx.save();
+        ctx.translate(x + 40, gridY + 290);
+        ctx.scale(gScale, gScale);
+        drawText(ctx, gStr, 0, 0, 35, gPos ? C.up : C.down, "left", "middle");
+        ctx.restore();
     };
 
     drawCard(leftX, "GLOBAL ASSETS", [
