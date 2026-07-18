@@ -78,7 +78,7 @@
                 <h3 class="font-bold text-gray-800 dark:text-gray-100">Asset Trend</h3>
                 <div class="flex gap-4 text-xs font-semibold">
                     <div class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-emerald-500"></span><span class="text-gray-600 dark:text-gray-400">TW Stock</span></div>
-                    <div class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-blue-500"></span><span class="text-gray-600 dark:text-gray-400">US Stock</span></div>
+                    <div class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-blue-500"></span><span class="text-gray-600 dark:text-gray-400">Global</span></div>
                 </div>
             </div>
             <!-- 調整 UI Canvas 的比例以符合大字體的空間需求 -->
@@ -117,19 +117,30 @@
 
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
-                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">US ($):</label>
+                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Global (USD):</label>
                         <input type="number" id="inUs" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700" step="0.01">
                     </div>
                     <div>
-                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">TW (NT):</label>
-                        <input type="number" id="inTw" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700">
+                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Global (TWD):</label>
+                        <input type="number" id="inGlobalTw" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700">
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
-                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">US Deposit:</label>
+                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Global Dep(USD):</label>
                         <input type="number" id="inUsDep" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700" step="0.01">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Global Dep(TWD):</label>
+                        <input type="number" id="inGlobalTwDep" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">TW (NT):</label>
+                        <input type="number" id="inTw" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700">
                     </div>
                     <div>
                         <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">TW Deposit:</label>
@@ -168,15 +179,22 @@
                         <input type="number" id="inPrevTotal" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700">
                     </div>
                     <div>
-                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Prev US:</label>
+                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Prev Global(USD):</label>
                         <input type="number" id="inPrevUs" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700" step="0.01">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
+                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Prev Global(TWD):</label>
+                        <input type="number" id="inPrevGlobalTw" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700">
+                    </div>
+                    <div>
                         <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Prev TW:</label>
                         <input type="number" id="inPrevTw" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700">
                     </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div></div>
                     <div>
                         <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Prev Rate:</label>
                         <input type="number" id="inPrevRate" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700" step="0.01">
@@ -252,8 +270,8 @@ const COLORS = {
 };
 
 let state = {
-    year: 2026, month: "January", us_stock: 35000.0, tw_stock: 1200000, us_deposit: 500.0, tw_deposit: 20000,
-    monthly_added_twd: 36250, exchange_rate: 32.5, prev_total: 2300000, prev_us: 34000.0, prev_tw: 1150000,
+    year: 2026, month: "January", us_stock: 35000.0, global_tw_stock: 0, tw_stock: 1200000, us_deposit: 500.0, global_tw_deposit: 0, tw_deposit: 20000,
+    monthly_added_twd: 36250, exchange_rate: 32.5, prev_total: 2300000, prev_us: 34000.0, prev_global_tw: 0, prev_tw: 1150000,
     ytd_deposit: 0, prev_exchange_rate: 32.0, leverage_ratio: 1.0, username: "", theme: "system", layout: "Multi Page",
     actual_theme: "light",
     updatedAt: new Date().toISOString()
@@ -278,11 +296,11 @@ const getDisplayDate = () => {
 
 const els = {
     year: document.getElementById('inYear'), month: document.getElementById('inMonth'),
-    us: document.getElementById('inUs'), tw: document.getElementById('inTw'),
-    usDep: document.getElementById('inUsDep'), twDep: document.getElementById('inTwDep'),
+    us: document.getElementById('inUs'), globalTw: document.getElementById('inGlobalTw'), tw: document.getElementById('inTw'),
+    usDep: document.getElementById('inUsDep'), globalTwDep: document.getElementById('inGlobalTwDep'), twDep: document.getElementById('inTwDep'),
     moAdded: document.getElementById('inMonthlyAdded'), lev: document.getElementById('inLeverage'),
     rate: document.getElementById('inRate'), totCalc: document.getElementById('inTotalCalc'),
-    pTot: document.getElementById('inPrevTotal'), pUs: document.getElementById('inPrevUs'),
+    pTot: document.getElementById('inPrevTotal'), pUs: document.getElementById('inPrevUs'), pGlobalTw: document.getElementById('inPrevGlobalTw'),
     pTw: document.getElementById('inPrevTw'), pRate: document.getElementById('inPrevRate'),
     usr: document.getElementById('inUsername'), theme: document.getElementById('inTheme'),
     layout: document.getElementById('inLayout'), combine: document.getElementById('inCombine'),
@@ -369,7 +387,7 @@ const getChartData = () => {
     historyRecords.forEach(r => {
         chartDataMap.set(r.monthId, {
             tw: parseInt(r.tw) || 0,
-            us: (parseFloat(r.us) || 0) * (parseFloat(r.rate) || 32),
+            us: (parseFloat(r.Global_USD || r.us || r.us_stock) || 0) * (parseFloat(r.rate) || 32) + (parseInt(r.global_tw) || 0),
             updatedAt: r.updatedAt || new Date().toISOString()
         });
     });
@@ -378,7 +396,7 @@ const getChartData = () => {
     const currentId = `${state.year}-${mIdx.toString().padStart(2, '0')}`;
     chartDataMap.set(currentId, {
         tw: state.tw_stock,
-        us: state.us_stock * state.exchange_rate,
+        us: state.us_stock * state.exchange_rate + state.global_tw_stock,
         updatedAt: state.updatedAt || new Date().toISOString()
     });
 
@@ -473,7 +491,7 @@ const generateImageSingle = () => {
     drawBackground(ctx, C);
 
     const title = `${state.month.substring(0, 3).toUpperCase()} ${state.year} ASSET REPORT`;
-    const currentTotal = Math.floor(state.us_stock * state.exchange_rate + state.tw_stock);
+    const currentTotal = Math.floor(state.us_stock * state.exchange_rate + state.global_tw_stock + state.tw_stock);
     const CX = CANVAS_SIZE.w / 2;
 
     drawText(ctx, title, CX, 100, 60, C.text_main, "center", "top", `bold 60px ${FONT_FAMILY}`);
@@ -517,7 +535,7 @@ const generateImageSingle = () => {
         drawText(ctx, `${gPos ? '▲' : '▼'} ${g.str} (${g.pct})`, x + 40, gridY + 290, 35, gPos ? C.up : C.down, "left", "middle");
     };
 
-    drawCard(leftX, "US STOCK", state.us_stock, state.us_deposit, state.prev_us);
+    drawCard(leftX, "GLOBAL ASSETS", state.us_stock * state.exchange_rate + state.global_tw_stock, (state.us_deposit * state.exchange_rate) + state.global_tw_deposit, state.prev_us * state.exchange_rate + state.prev_global_tw);
     drawCard(rightX, "TW STOCK", state.tw_stock, state.tw_deposit, state.prev_tw);
 
     drawFooter(ctx, C, 200);
@@ -543,7 +561,7 @@ const generateImageP1 = () => {
     drawBackground(ctx, C);
 
     const title = `${state.month.substring(0, 3).toUpperCase()} ${state.year} ASSET REPORT`;
-    const currentTotal = Math.floor(state.us_stock * state.exchange_rate + state.tw_stock);
+    const currentTotal = Math.floor(state.us_stock * state.exchange_rate + state.global_tw_stock + state.tw_stock);
     const CX = CANVAS_SIZE.w / 2;
 
     drawText(ctx, title, CX, 100, 60, C.text_main, "center", "top", `bold 60px ${FONT_FAMILY}`);
@@ -587,7 +605,7 @@ const generateImageP1 = () => {
         drawText(ctx, `${gPos ? '▲' : '▼'} ${g.str} (${g.pct})`, x + 40, gridY + 290, 35, gPos ? C.up : C.down, "left", "middle");
     };
 
-    drawCard(leftX, "US STOCK", state.us_stock, state.us_deposit, state.prev_us);
+    drawCard(leftX, "GLOBAL ASSETS", state.us_stock * state.exchange_rate + state.global_tw_stock, (state.us_deposit * state.exchange_rate) + state.global_tw_deposit, state.prev_us * state.exchange_rate + state.prev_global_tw);
     drawCard(rightX, "TW STOCK", state.tw_stock, state.tw_deposit, state.prev_tw);
 
     drawFooter(ctx, C, 100);
@@ -643,7 +661,7 @@ const generateImageP2 = () => {
     drawRoundRect(ctx, lx1, ly - 10, 15, 15, 3, "#10b981");
     drawText(ctx, "TW", lx1 + 25, ly - 2, 22, C.text_sub, "left", "middle");
     drawRoundRect(ctx, lx2, ly - 10, 15, 15, 3, "#3b82f6");
-    drawText(ctx, "US", lx2 + 25, ly - 2, 22, C.text_sub, "left", "middle");
+    drawText(ctx, "GLOBAL", lx2 + 25, ly - 2, 22, C.text_sub, "left", "middle");
 
     const chartData = getChartData();
     const cX = startX + 100, cY = yTrend + 100, cW = trendW - 140, cH = trendH - 160;
@@ -682,14 +700,14 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () 
 });
 
 const attachListeners = () => {
-    const inputs = [els.year, els.month, els.us, els.tw, els.usDep, els.twDep, els.moAdded, els.lev, els.rate, els.pTot, els.pUs, els.pTw, els.pRate, els.usr, els.theme, els.layout];
+    const inputs = [els.year, els.month, els.us, els.globalTw, els.tw, els.usDep, els.globalTwDep, els.twDep, els.moAdded, els.lev, els.rate, els.pTot, els.pUs, els.pGlobalTw, els.pTw, els.pRate, els.usr, els.theme, els.layout];
     inputs.forEach(el => el.addEventListener('change', () => {
         if (isLoading) return;
         updateStateFromUI();
         renderCanvas();
     }));
 
-    const textInputs = [els.us, els.tw, els.usDep, els.twDep, els.moAdded, els.lev, els.rate, els.pTot, els.pUs, els.pTw, els.pRate, els.usr];
+    const textInputs = [els.us, els.globalTw, els.tw, els.usDep, els.globalTwDep, els.twDep, els.moAdded, els.lev, els.rate, els.pTot, els.pUs, els.pGlobalTw, els.pTw, els.pRate, els.usr];
     textInputs.forEach(el => el.addEventListener('input', () => {
         if (isLoading) return;
         updateStateFromUI();
@@ -740,14 +758,14 @@ const attachListeners = () => {
         const mIdx = MONTHS.indexOf(state.month) + 1;
         const mStr = mIdx.toString().padStart(2, '0');
         const monthId = `${state.year}-${mStr}`;
-        const totalVal = Math.floor(state.us_stock * state.exchange_rate + state.tw_stock);
+        const totalVal = Math.floor(state.us_stock * state.exchange_rate + state.global_tw_stock + state.tw_stock);
 
         state.updatedAt = new Date().toISOString(); 
 
         const newRec = {
             id: monthId, monthId: monthId, total: String(totalVal),
-            us: String(state.us_stock), tw: String(state.tw_stock),
-            us_deposit: String(state.us_deposit), tw_deposit: String(state.tw_deposit),
+            Global_USD: String(state.us_stock), global_tw: String(state.global_tw_stock), tw: String(state.tw_stock),
+            us_deposit: String(state.us_deposit), global_tw_deposit: String(state.global_tw_deposit), tw_deposit: String(state.tw_deposit),
             monthly_added_twd: String(state.monthly_added_twd), leverage_ratio: String(state.leverage_ratio),
             rate: String(state.exchange_rate),
             username: state.username,
@@ -879,14 +897,17 @@ const updateStateFromUI = () => {
     state.year = parseInt(els.year.value);
     state.month = els.month.value;
     state.us_stock = parseFloat(els.us.value) || 0;
+    state.global_tw_stock = parseInt(els.globalTw.value) || 0;
     state.tw_stock = parseInt(els.tw.value) || 0;
     state.us_deposit = parseFloat(els.usDep.value) || 0;
+    state.global_tw_deposit = parseInt(els.globalTwDep.value) || 0;
     state.tw_deposit = parseInt(els.twDep.value) || 0;
     state.monthly_added_twd = parseInt(els.moAdded.value) || 0;
     state.leverage_ratio = parseFloat(els.lev.value) || 1.0;
     state.exchange_rate = parseFloat(els.rate.value) || 32.0;
     state.prev_total = parseInt(els.pTot.value) || 0;
     state.prev_us = parseFloat(els.pUs.value) || 0;
+    state.prev_global_tw = parseInt(els.pGlobalTw.value) || 0;
     state.prev_tw = parseInt(els.pTw.value) || 0;
     state.prev_exchange_rate = parseFloat(els.pRate.value) || 32.0;
     
@@ -902,7 +923,7 @@ const updateStateFromUI = () => {
     state.layout = els.layout.value;
     localStorage.setItem('assetReportLayout', state.layout);
 
-    const tot = Math.floor(state.us_stock * state.exchange_rate + state.tw_stock);
+    const tot = Math.floor(state.us_stock * state.exchange_rate + state.global_tw_stock + state.tw_stock);
     els.totCalc.value = tot;
 
     let ytdSum = 0;
@@ -921,11 +942,11 @@ const updateStateFromUI = () => {
 
 const updateUIFromState = () => {
     els.year.value = state.year; els.month.value = state.month;
-    els.us.value = state.us_stock; els.tw.value = state.tw_stock;
-    els.usDep.value = state.us_deposit; els.twDep.value = state.tw_deposit;
+    els.us.value = state.us_stock; els.globalTw.value = state.global_tw_stock; els.tw.value = state.tw_stock;
+    els.usDep.value = state.us_deposit; els.globalTwDep.value = state.global_tw_deposit; els.twDep.value = state.tw_deposit;
     els.moAdded.value = state.monthly_added_twd; els.lev.value = state.leverage_ratio;
     els.rate.value = state.exchange_rate; els.pTot.value = state.prev_total;
-    els.pUs.value = state.prev_us; els.pTw.value = state.prev_tw;
+    els.pUs.value = state.prev_us; els.pGlobalTw.value = state.prev_global_tw; els.pTw.value = state.prev_tw;
     els.pRate.value = state.prev_exchange_rate; els.usr.value = state.username;
     els.theme.value = state.theme; els.layout.value = state.layout;
     updateStateFromUI();
@@ -948,8 +969,8 @@ const loadRecordToUI = (rec) => {
     try {
         const [y, m] = rec.monthId.split('-');
         els.year.value = y; els.month.value = MONTHS[parseInt(m)-1];
-        els.us.value = rec.us || 0; els.tw.value = rec.tw || 0;
-        els.usDep.value = rec.us_deposit || 0; els.twDep.value = rec.tw_deposit || 0;
+        els.us.value = rec.Global_USD || rec.us || rec.us_stock || 0; els.globalTw.value = rec.global_tw || 0; els.tw.value = rec.tw || 0;
+        els.usDep.value = rec.us_deposit || 0; els.globalTwDep.value = rec.global_tw_deposit || 0; els.twDep.value = rec.tw_deposit || 0;
         els.moAdded.value = rec.monthly_added_twd || 0; els.lev.value = rec.leverage_ratio || 1.0;
         if(rec.rate) els.rate.value = rec.rate;
         if(rec.username) els.usr.value = rec.username;
@@ -962,7 +983,8 @@ const loadPrevData = (recId) => {
     const rec = historyRecords.find(r => r.monthId === recId);
     if(rec) {
         els.pTot.value = parseInt(rec.total || 0);
-        els.pUs.value = parseFloat(rec.us || 0);
+        els.pUs.value = parseFloat(rec.Global_USD || rec.us || rec.us_stock || 0);
+        els.pGlobalTw.value = parseInt(rec.global_tw || 0);
         els.pTw.value = parseInt(rec.tw || 0);
         els.pRate.value = parseFloat(rec.rate || 32.5);
     }
